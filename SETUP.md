@@ -1,43 +1,25 @@
 # Setup Guide for Team Members
 
-This guide will help you get the AI Oral Exam Grader running on your machine.
+This guide will help you get the AI Oral Exam Grader running on your machine in minutes.
 
-## Prerequisites
+## Quick Start (5 Minutes)
 
-Before you begin, make sure you have:
-
-- **Python 3.9 or higher** - Check with `python --version`
-- **pip** - Python package manager (usually comes with Python)
-- **Git** - For cloning the repository
-
-## Step-by-Step Setup
-
-### 1. Clone the Repository
-
+### Step 1: Clone the Repository
 ```bash
 git clone <repository-url>
 cd ai-oral-exam-grader
 ```
 
-### 2. Install Dependencies
-
-Install all required Python packages:
-
+### Step 2: Install Dependencies
 ```bash
 pip install -e .
 ```
 
-This will install:
-- FastAPI (web framework)
-- Uvicorn (ASGI server)
-- SQLAlchemy (database ORM)
-- Pydantic (data validation)
-- And other dependencies listed in `pyproject.toml`
+**Note:** If you get permission errors, use:
+- Windows: `pip install -e . --user`
+- Mac/Linux: `pip install -e . --user` or use `sudo` (not recommended)
 
-### 3. Initialize the Database
-
-Create the SQLite database and tables:
-
+### Step 3: Initialize Database
 ```bash
 python -m app.db.init_db
 ```
@@ -48,20 +30,9 @@ INFO - Creating database tables...
 INFO - Database tables created successfully!
 ```
 
-A file called `exam_grader.db` will be created in the project root.
-
-### 4. Run the Application
-
-Start the development server:
-
+### Step 4: Run the Application
 ```bash
 python run.py
-```
-
-Or:
-
-```bash
-uvicorn app.main:app --reload
 ```
 
 You should see output like:
@@ -70,53 +41,72 @@ INFO:     Uvicorn running on http://0.0.0.0:8000
 INFO:     Application startup complete.
 ```
 
-### 5. Access the Application
+### Step 5: Open in Browser
+Open your browser and go to: **http://localhost:8000**
 
-Open your web browser and navigate to:
-
-```
-http://localhost:8000
-```
-
-You should see the login page!
+That's it! 🎉
 
 ---
 
-## Demo Mode vs. AI Mode
+## Detailed Setup Instructions
 
-### Demo Mode (Default - No Setup Needed)
+### Prerequisites
 
-The app works **immediately** without any additional configuration:
+Make sure you have:
+- **Python 3.9 or higher** (check with `python --version`)
+- **pip** (usually comes with Python)
+- **Git** (for cloning)
 
-- ✅ Pre-written questions (3 different questions)
-- ✅ Basic grading (length-based evaluation)
-- ✅ Full workflow: login → questions → answers → results
-- ✅ Perfect for testing and demos
+#### Check Your Python Version
+```bash
+python --version
+# Should show Python 3.9.x or higher
+```
 
-**No API key needed!**
+If you don't have Python 3.9+, download from [python.org](https://www.python.org/downloads/)
+
+### Platform-Specific Instructions
+
+#### Windows
+1. Open PowerShell or Command Prompt
+2. Navigate to project directory
+3. Run the setup steps above
+
+#### Mac/Linux
+1. Open Terminal
+2. Navigate to project directory
+3. Run the setup steps above
+
+---
+
+## Using the Application
+
+### Demo Mode (Default)
+The app works **without any API key** in demo mode:
+- Uses 3 pre-written questions
+- Basic grading based on answer length
+- Perfect for testing and demos
 
 ### AI Mode (Optional)
-
 To enable AI-generated questions and AI grading:
-
-1. Get a free API key from [Together.ai](https://together.ai)
+1. Get a free API key from [together.ai](https://together.ai)
 2. Set it as an environment variable:
-
-   **Windows (PowerShell):**
+   
+   **Windows PowerShell:**
    ```powershell
    $env:TOGETHER_API_KEY="your_api_key_here"
    ```
-
-   **Windows (Command Prompt):**
-   ```cmd
-   set TOGETHER_API_KEY=your_api_key_here
-   ```
-
-   **Linux/Mac:**
+   
+   **Mac/Linux:**
    ```bash
    export TOGETHER_API_KEY="your_api_key_here"
    ```
-
+   
+   **Or create a `.env` file:**
+   ```
+   TOGETHER_API_KEY=your_api_key_here
+   DATABASE_URL=sqlite:///./exam_grader.db
+   ```
 3. Restart the server
 
 See `API_KEY_GUIDE.md` for more details.
@@ -125,54 +115,73 @@ See `API_KEY_GUIDE.md` for more details.
 
 ## Testing the Application
 
-1. **Login:**
-   - Enter any username (e.g., "test_student")
-   - Click "Start Exam"
+### Basic Test Flow
+1. Open http://localhost:8000
+2. Enter a username (e.g., "test_student")
+3. Click "Start Exam"
+4. Answer Question 1 (about data structures)
+5. Submit your answer
+6. Continue to Question 2 (Big O notation)
+7. Continue to Question 3 (Recursion)
+8. View your final grade and feedback
 
-2. **Answer Questions:**
-   - Read the question and context
-   - Type your answer in the text box
-   - Click "Submit Answer"
-   - Repeat for all 3 questions
-
-3. **View Results:**
-   - After submitting all answers, you'll see your final grade
-   - Review feedback for each question
-   - See your overall performance summary
+### What You Should See
+- ✅ Clean, modern UI
+- ✅ Progress bar showing question number
+- ✅ Different questions for each step
+- ✅ Grading feedback after each answer
+- ✅ Final grade summary at the end
 
 ---
 
 ## Troubleshooting
 
-### "Module not found" errors
-
+### "Module not found" or Import Errors
 **Solution:** Make sure you installed dependencies:
 ```bash
 pip install -e .
 ```
 
-### Port 8000 already in use
+### Port 8000 Already in Use
+**Solution 1:** Stop the other application using port 8000
 
-**Solution:** Either:
-- Stop the other application using port 8000
-- Or modify `run.py` to use a different port
+**Solution 2:** Run on a different port:
+```bash
+uvicorn app.main:app --port 8001
+```
+Then access at http://localhost:8001
 
-### Database errors
-
+### Database Errors
 **Solution:** Delete the database and reinitialize:
 ```bash
-rm exam_grader.db  # Linux/Mac
+# Delete the database file
+rm exam_grader.db  # Mac/Linux
 del exam_grader.db  # Windows
+
+# Reinitialize
 python -m app.db.init_db
 ```
 
-### Server won't start
+### "Command not found: python"
+**Solution:** Try `python3` instead:
+```bash
+python3 -m app.db.init_db
+python3 run.py
+```
 
-**Solution:** Check that:
-- Python 3.9+ is installed
-- All dependencies are installed
-- You're in the correct directory
-- Port 8000 is available
+### Server Won't Start
+**Check:**
+1. Are you in the correct directory?
+2. Did you install dependencies? (`pip install -e .`)
+3. Check for error messages in the terminal
+
+### Questions Look the Same
+**This is normal in demo mode!** Each question IS different:
+- Question 1: Data Structures
+- Question 2: Algorithm Complexity  
+- Question 3: Recursion
+
+If you want AI-generated unique questions, see `API_KEY_GUIDE.md`.
 
 ---
 
@@ -183,31 +192,51 @@ ai-oral-exam-grader/
 ├── app/              # Main application code
 ├── prompts/          # LLM prompt templates
 ├── run.py           # Quick start script
-├── pyproject.toml   # Dependencies and project config
+├── pyproject.toml   # Dependencies
 └── README.md        # Project overview
 ```
+
+---
+
+## Development Tips
+
+### Running with Auto-Reload
+The server automatically reloads when you change code:
+```bash
+python run.py
+# Or explicitly:
+uvicorn app.main:app --reload
+```
+
+### Viewing Logs
+Check the terminal where you ran `python run.py` for logs and errors.
+
+### Database Location
+The SQLite database is at: `exam_grader.db` (in project root)
+
+### Making Changes
+1. Edit code files
+2. Server auto-reloads (if using `--reload`)
+3. Refresh browser to see changes
 
 ---
 
 ## Getting Help
 
 If you run into issues:
-
-1. Check the error messages in the terminal
-2. Review this setup guide
-3. Check `API_KEY_GUIDE.md` if using AI features
-4. Ask your team lead
+1. Check this guide first
+2. Check `API_KEY_GUIDE.md` for API key questions
+3. Check the main `README.md` for project overview
+4. Ask your team members!
 
 ---
 
 ## Next Steps
 
-Once you have the app running:
-
-- Try different usernames to create multiple exam sessions
-- Test the full exam workflow
-- Explore the codebase to understand the architecture
-- Check out the prompt templates in `prompts/` directory
+Once you have it running:
+- Try the full exam workflow
+- Check out the code structure
+- Read `README.md` for project architecture
+- Review `API_KEY_GUIDE.md` if you want AI features
 
 Happy coding! 🚀
-
