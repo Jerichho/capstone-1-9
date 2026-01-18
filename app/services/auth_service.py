@@ -13,7 +13,9 @@ def authenticate_user(db: Session, email: str, password: str):
 
     return user
 
-def create_user(db: Session, email: str, password: str, role: str = "student"):
+def create_user(db: Session, email: str, password: str, role: str = "student", 
+                first_name: str = "", last_name: str = "", 
+                student_id: str = None, instructor_id: str = None):
     """Create a new user account.
     
     Args:
@@ -21,6 +23,10 @@ def create_user(db: Session, email: str, password: str, role: str = "student"):
         email: User email (must be unique)
         password: User password (stored as-is, no hashing)
         role: User role (default: "student")
+        first_name: User's first name
+        last_name: User's last name
+        student_id: Student ID (for students only)
+        instructor_id: Instructor ID (for teachers only)
     
     Returns:
         User object if created successfully, None if email already exists
@@ -34,7 +40,11 @@ def create_user(db: Session, email: str, password: str, role: str = "student"):
     user = User(
         email=email,
         password_hash=password,
-        role=role
+        role=role,
+        first_name=first_name,
+        last_name=last_name,
+        student_id=student_id if role == "student" else None,
+        instructor_id=instructor_id if role == "teacher" else None
     )
     
     try:

@@ -1,10 +1,13 @@
 """Main FastAPI application."""
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
+from sqlalchemy.orm import Session
 from app.api.router import api_router
 from app.db.base import Base, engine
+from app.db.session import get_db
+from app.db.models import User
 from app.logging_config import setup_logging
 
 # Import seeding function
@@ -43,9 +46,46 @@ def render_template(template_name: str, context: dict) -> HTMLResponse:
     return HTMLResponse(content=html_content)
 
 @app.get("/student/dashboard", response_class=HTMLResponse)
-async def student_dashboard(request: Request):
-    """Blank student dashboard page."""
-    return render_template("student_dashboard.html", {"request": request})
+async def student_dashboard(request: Request, db: Session = Depends(get_db)):
+    """Student dashboard page with personalized welcome."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Use first_name if available, otherwise fallback to "Student"
+    first_name = user.first_name if user.first_name else "Student"
+    
+    return render_template("student_dashboard.html", {
+        "request": request,
+        "first_name": first_name
+    })
+
+@app.get("/teacher/dashboard", response_class=HTMLResponse)
+async def teacher_dashboard(request: Request, db: Session = Depends(get_db)):
+    """Teacher dashboard page with personalized welcome."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Use first_name if available, otherwise fallback to "Teacher"
+    first_name = user.first_name if user.first_name else "Teacher"
+    
+    return render_template("teacher_dashboard.html", {
+        "request": request,
+        "first_name": first_name
+    })
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):

@@ -32,14 +32,57 @@
                     <input type="password" id="password" name="password" required>
                 </div>
                 <div class="form-group">
+                    <label for="first_name">First Name:</label>
+                    <input type="text" id="first_name" name="first_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Last Name:</label>
+                    <input type="text" id="last_name" name="last_name" required>
+                </div>
+                <div class="form-group">
                     <label for="role">Account Type:</label>
-                    <select id="role" name="role" required>
+                    <select id="role" name="role" required onchange="toggleIdField()">
                         <option value="student" selected>Student</option>
                         <option value="teacher">Teacher</option>
                     </select>
                 </div>
+                <div class="form-group" id="student-id-group">
+                    <label for="student_id">Student ID:</label>
+                    <input type="text" id="student_id" name="student_id" required>
+                </div>
+                <div class="form-group" id="instructor-id-group" style="display: none;">
+                    <label for="instructor_id">Instructor ID:</label>
+                    <input type="text" id="instructor_id" name="instructor_id">
+                </div>
                 <button type="submit" class="btn btn-primary">Create Account</button>
             </form>
+            
+            <script>
+                function toggleIdField() {
+                    const role = document.getElementById('role').value;
+                    const studentIdGroup = document.getElementById('student-id-group');
+                    const instructorIdGroup = document.getElementById('instructor-id-group');
+                    const studentIdInput = document.getElementById('student_id');
+                    const instructorIdInput = document.getElementById('instructor_id');
+                    
+                    if (role === 'student') {
+                        studentIdGroup.style.display = 'block';
+                        instructorIdGroup.style.display = 'none';
+                        studentIdInput.required = true;
+                        instructorIdInput.required = false;
+                        instructorIdInput.value = '';
+                    } else {
+                        studentIdGroup.style.display = 'none';
+                        instructorIdGroup.style.display = 'block';
+                        studentIdInput.required = false;
+                        instructorIdInput.required = true;
+                        studentIdInput.value = '';
+                    }
+                }
+                
+                // Initialize on page load
+                window.addEventListener('DOMContentLoaded', toggleIdField);
+            </script>
             
             <p style="text-align: center; margin-top: 20px;">
                 Already have an account? <a href="/">Log in here</a>

@@ -30,7 +30,13 @@ async def login(
         response.set_cookie(key="username", value=email)
         return response
     
-    # Otherwise (teacher or other roles) → start exam as before
+    # If the user is a teacher, redirect to teacher dashboard
+    if user.role == "teacher":
+        response = RedirectResponse(url="/teacher/dashboard", status_code=302)
+        response.set_cookie(key="username", value=email)
+        return response
+    
+    # Otherwise (other roles) → start exam as before
     exam_service = ExamService()
     exam = await exam_service.start_exam(db, email)  # email used as placeholder username
     
@@ -47,7 +53,11 @@ async def signup(
     request: Request,
     email: str = Form(...),
     password: str = Form(...),
+    first_name: str = Form(...),
+    last_name: str = Form(...),
     role: str = Form("student"),
+    student_id: str = Form(None),
+    instructor_id: str = Form(None),
     db: Session = Depends(get_db)
 ):
     """Create a new user account."""
@@ -57,7 +67,16 @@ async def signup(
         role = "student"
     
     # Create user account
-    user = create_user(db, email, password, role)
+    user = create_user(
+        db, 
+        email, 
+        password, 
+        role, 
+        first_name=first_name, 
+        last_name=last_name,
+        student_id=student_id if student_id else None,
+        instructor_id=instructor_id if instructor_id else None
+    )
     if not user:
         # User already exists or creation failed
         return RedirectResponse(url="/signup?error=email_exists", status_code=302)

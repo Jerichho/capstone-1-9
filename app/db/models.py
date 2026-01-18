@@ -14,6 +14,10 @@ class User(Base):
     email = Column(String(100), unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     role = Column(String(50), nullable=False)  # "student" or "teacher"
+    first_name = Column(String(100), nullable=False)
+    last_name = Column(String(100), nullable=False)
+    student_id = Column(String(50), nullable=True)  # Only for students
+    instructor_id = Column(String(50), nullable=True)  # Only for teachers
     
 class Student(Base):
     """Student model."""
