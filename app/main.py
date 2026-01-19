@@ -305,33 +305,48 @@ async def create_exam_page(request: Request, db: Session = Depends(get_db)):
 @app.post("/teacher/create-exam")
 async def create_exam(
     request: Request,
-    course_number: str = Form(...),
-    quarter_year: str = Form(...),
-    exam_name: str = Form(...),
-    llm_prompt: str = Form(...),
     db: Session = Depends(get_db)
 ):
     """Handle exam creation form submission."""
-    # Get email from cookie
-    email = request.cookies.get("username")
-    if not email:
-        return RedirectResponse(url="/?error=login_required", status_code=302)
-    
-    # Get user from database
-    user = db.query(User).filter(User.email == email).first()
-    if not user or user.role != "teacher":
-        return RedirectResponse(url="/?error=login_required", status_code=302)
-    
-    # Get sections from form (as list from checkboxes)
-    form_data = await request.form()
-    sections_raw = form_data.getlist("sections[]")
-    if not sections_raw:
-        single_section = form_data.get("sections[]")
-        sections = [single_section] if single_section else []
-    else:
-        sections = sections_raw
-    
-    # Validate input
+    try:
+        # Get form data manually to handle missing fields gracefully
+        form_data = await request.form()
+        
+        # Get email from cookie
+        email = request.cookies.get("username")
+        if not email:
+            return RedirectResponse(url="/?error=login_required", status_code=302)
+        
+        # Get user from database
+        user = db.query(User).filter(User.email == email).first()
+        if not user or user.role != "teacher":
+            return RedirectResponse(url="/?error=login_required", status_code=302)
+        
+        # Extract form fields with error handling
+        course_number = form_data.get("course_number", "").strip()
+        quarter_year = form_data.get("quarter_year", "").strip()
+        exam_name = form_data.get("exam_name", "").strip()
+        llm_prompt = form_data.get("llm_prompt", "").strip()
+        
+        # Validate required fields
+        if not course_number:
+            return RedirectResponse(url="/teacher/create-exam?error=Course number is required", status_code=302)
+        if not quarter_year:
+            return RedirectResponse(url="/teacher/create-exam?error=Quarter/Year is required", status_code=302)
+        if not exam_name:
+            return RedirectResponse(url="/teacher/create-exam?error=Exam name is required", status_code=302)
+        if not llm_prompt:
+            return RedirectResponse(url="/teacher/create-exam?error=LLM prompt is required", status_code=302)
+        
+        # Get sections from form (as list from checkboxes)
+        sections_raw = form_data.getlist("sections[]")
+        if not sections_raw:
+            single_section = form_data.get("sections[]")
+            sections = [single_section] if single_section else []
+        else:
+            sections = sections_raw
+        
+        # Validate input
     if not sections or len(sections) == 0:
         return RedirectResponse(url="/teacher/create-exam?error=At least one section must be selected", status_code=302)
     
@@ -431,24 +446,32 @@ async def create_exam(
         except Exception as e:
             db.rollback()
             return RedirectResponse(url=f"/teacher/create-exam?error=Error saving exams: {str(e)}", status_code=302)
-    
-    # Handle results
-    if errors and not created_exams:
-        # All failed
-        error_msg = "; ".join(errors)
-        return RedirectResponse(url=f"/teacher/create-exam?error={error_msg}", status_code=302)
-    elif errors and created_exams:
-        # Some succeeded, some failed
-        return RedirectResponse(url=f"/teacher/dashboard?warning=Some exams created successfully. Issues: {'; '.join(errors)}", status_code=302)
-    
-    # Success - redirect to dashboard (all exams created)
-    if len(created_exams) == 1:
-        # If only one exam created, redirect to its course page
-        exam = created_exams[0]
-        return RedirectResponse(url=f"/teacher/course/{course_number.upper()}/{exam.section}?exam_created={exam.exam_id}", status_code=302)
-    else:
-        # Multiple exams created, redirect to dashboard
-        return RedirectResponse(url=f"/teacher/dashboard?success=exams_created&count={len(created_exams)}", status_code=302)
+        
+        # Handle results
+        if errors and not created_exams:
+            # All failed
+            error_msg = "; ".join(errors)
+            return RedirectResponse(url=f"/teacher/create-exam?error={error_msg}", status_code=302)
+        elif errors and created_exams:
+            # Some succeeded, some failed
+            return RedirectResponse(url=f"/teacher/dashboard?warning=Some exams created successfully. Issues: {'; '.join(errors)}", status_code=302)
+        
+        # Success - redirect to dashboard (all exams created)
+        if len(created_exams) == 1:
+            # If only one exam created, redirect to its course page
+            exam = created_exams[0]
+            return RedirectResponse(url=f"/teacher/course/{course_number.upper()}/{exam.section}?exam_created={exam.exam_id}", status_code=302)
+        else:
+            # Multiple exams created, redirect to dashboard
+            return RedirectResponse(url=f"/teacher/dashboard?success=exams_created&count={len(created_exams)}", status_code=302)
+            
+    except Exception as e:
+        # Catch any unexpected errors
+        import traceback
+        error_details = str(e)
+        print(f"Error in create_exam: {error_details}")
+        print(traceback.format_exc())
+        return RedirectResponse(url=f"/teacher/create-exam?error=Unexpected error: {error_details}", status_code=302)
 
 @app.get("/teacher/course/{course_number}/{section}", response_class=HTMLResponse)
 async def course_page(

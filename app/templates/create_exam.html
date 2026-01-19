@@ -351,11 +351,21 @@
         
         // Validate at least one section is selected on form submit
         document.getElementById('create-exam-form').addEventListener('submit', function(e) {
+            console.log('Form submit event triggered');
             const checkedSections = document.querySelectorAll('input[name="sections[]"]:checked');
+            console.log('Checked sections:', checkedSections.length);
+            
             if (checkedSections.length === 0) {
                 e.preventDefault();
                 alert('Please select at least one section.');
                 return false;
+            }
+            
+            // Log form data being submitted
+            const formData = new FormData(this);
+            console.log('Form data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}: ${value}`);
             }
         });
     </script>
