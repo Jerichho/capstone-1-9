@@ -468,11 +468,24 @@ async def create_exam(
             # Generate exam_id: course_number-section-exam_name-quarter_year
             exam_id = f"{course_number.upper()}-{section}-{exam_name.lower().replace(' ', '-')}-{quarter_year}"
             
-            # Check if exam with this ID already exists and is not terminated
+            # Check if exam with this ID already exists
             existing_exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
-            if existing_exam and existing_exam.status != "terminated":
-                errors.append(f"Exam '{exam_name}' for Section {section} already exists")
-                continue
+            if existing_exam:
+                if existing_exam.status != "terminated":
+                    # Active exam exists, cannot create duplicate
+                    errors.append(f"Exam '{exam_name}' for Section {section} already exists")
+                    continue
+                else:
+                    # Terminated exam exists, rename it to make room for new exam
+                    # Add timestamp suffix to terminated exam's ID
+                    timestamp_suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+                    existing_exam.exam_id = f"{existing_exam.exam_id}-terminated-{timestamp_suffix}"
+                    try:
+                        db.commit()
+                    except Exception as e:
+                        db.rollback()
+                        errors.append(f"Error updating terminated exam for Section {section}: {str(e)}")
+                        continue
             
             # Create new exam (not published yet, status = "not_started")
             exam = Exam(
