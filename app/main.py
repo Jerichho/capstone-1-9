@@ -217,6 +217,62 @@ async def register_course(
     # Success - redirect to dashboard
     return RedirectResponse(url="/teacher/dashboard?success=course_registered", status_code=302)
 
+@app.get("/teacher/course/{course_number}/{section}", response_class=HTMLResponse)
+async def course_page(
+    request: Request,
+    course_number: str,
+    section: str,
+    db: Session = Depends(get_db)
+):
+    """Display course page with exams."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get course from database (verify it belongs to this instructor)
+    course = db.query(Course).filter(
+        Course.course_number == course_number.upper(),
+        Course.section == section,
+        Course.instructor_id == user.id
+    ).first()
+    
+    if not course:
+        return RedirectResponse(url="/teacher/dashboard?error=course_not_found", status_code=302)
+    
+    # TODO: Query exams for this course/section from database
+    # For now, using empty lists as placeholder until Exam model is extended with course info
+    # When Exam model has course_number, section, quarter_year fields, query like:
+    # open_exams = db.query(Exam).filter(
+    #     Exam.course_number == course_number,
+    #     Exam.section == section,
+    #     Exam.quarter_year == course.quarter_year,
+    #     Exam.status.in_(["active", "in_progress", "not_started"])
+    # ).all()
+    # closed_exams = db.query(Exam).filter(
+    #     Exam.course_number == course_number,
+    #     Exam.section == section,
+    #     Exam.quarter_year == course.quarter_year,
+    #     Exam.status == "completed"
+    # ).all()
+    
+    open_exams = []  # Will be populated when Exam model is extended
+    closed_exams = []  # Will be populated when Exam model is extended
+    
+    return render_template("course_page.html", {
+        "request": request,
+        "course_number": course_number.upper(),
+        "section": section,
+        "quarter_year": course.quarter_year,
+        "open_exams": open_exams,
+        "closed_exams": closed_exams
+    })
+
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
     """Root page - login form."""

@@ -38,8 +38,23 @@ class Exam(Base):
     __tablename__ = "exams"
     
     id = Column(Integer, primary_key=True, index=True)
-    student_id = Column(Integer, ForeignKey("students.id"), nullable=False)
-    status = Column(String(50), default="in_progress")  # in_progress, completed
+    exam_id = Column(String(100), unique=True, index=True, nullable=False)  # e.g., "CSC376-424-midterm-Spring26"
+    course_number = Column(String(20), nullable=False, index=True)  # e.g., "CSC376"
+    section = Column(String(10), nullable=False)  # e.g., "424"
+    exam_name = Column(String(100), nullable=False)  # e.g., "Midterm"
+    quarter_year = Column(String(20), nullable=False)  # e.g., "Spring26"
+    instructor_name = Column(String(200), nullable=True)  # Instructor's full name
+    instructor_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)  # FK to instructor
+    
+    # Date/time fields
+    date_start = Column(DateTime(timezone=True), nullable=True)  # Exam start date/time
+    date_end = Column(DateTime(timezone=True), nullable=True)  # Exam end date/time
+    date_published = Column(DateTime(timezone=True), nullable=True)  # When exam was published
+    date_end_availability = Column(DateTime(timezone=True), nullable=True)  # When exam availability ends
+    
+    # Student exam session fields (existing)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=True)  # Nullable for teacher-created exams
+    status = Column(String(50), default="in_progress")  # in_progress, completed, active, not_started
     final_grade = Column(Float, nullable=True)
     final_explanation = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
