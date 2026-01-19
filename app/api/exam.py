@@ -24,7 +24,27 @@ def render_template(template_name: str, context: dict) -> HTMLResponse:
 @router.get("/exam/{exam_id}", response_class=HTMLResponse)
 async def get_exam(request: Request, exam_id: int, db: Session = Depends(get_db)):
     """Get current question for exam."""
+    from app.db.repo import ExamRepository, QuestionRepository
+    
     exam_service = ExamService()
+    
+    # Get exam to check if it exists
+    exam = ExamRepository.get(db, exam_id)
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+    
+    # Check if exam has any questions
+    questions = QuestionRepository.get_by_exam(db, exam_id)
+    
+    if len(questions) == 0:
+        # No questions yet - exam might not be ready
+        # For now, show a message that exam is being prepared
+        return render_template("exam_preparing.html", {
+            "request": request,
+            "exam": exam,
+            "exam_id": exam_id
+        })
+    
     question = await exam_service.get_current_question(db, exam_id)
     
     if question is None:
