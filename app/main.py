@@ -468,9 +468,9 @@ async def create_exam(
             # Generate exam_id: course_number-section-exam_name-quarter_year
             exam_id = f"{course_number.upper()}-{section}-{exam_name.lower().replace(' ', '-')}-{quarter_year}"
             
-            # Check if exam with this ID already exists
+            # Check if exam with this ID already exists and is not terminated
             existing_exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
-            if existing_exam:
+            if existing_exam and existing_exam.status != "terminated":
                 errors.append(f"Exam '{exam_name}' for Section {section} already exists")
                 continue
             
