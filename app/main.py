@@ -223,9 +223,18 @@ async def student_dashboard(request: Request, db: Session = Depends(get_db)):
                     })
         
         # Sort previous exams by completion date or end availability date
+        # Normalize all datetimes to timezone-aware for comparison
+        def normalize_datetime(dt):
+            if dt is None:
+                return datetime.min.replace(tzinfo=timezone.utc)
+            if dt.tzinfo is None:
+                # Naive datetime, assume UTC
+                return dt.replace(tzinfo=timezone.utc)
+            return dt
+        
         previous_exams.sort(key=lambda x: (
-            x["completed_at"] if x["completed_at"] else datetime.min.replace(tzinfo=timezone.utc),
-            x.get("date_end_availability") if x.get("date_end_availability") else datetime.min.replace(tzinfo=timezone.utc)
+            normalize_datetime(x["completed_at"]),
+            normalize_datetime(x.get("date_end_availability"))
         ), reverse=True)
     
     error = request.query_params.get("error", "")

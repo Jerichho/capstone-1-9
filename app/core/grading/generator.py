@@ -216,21 +216,31 @@ Topic: {topic}
 Number of Questions: {num_questions}
 {f'Additional Details: {additional_details}' if additional_details else ''}
 
-Rules:
-- Generate exactly {num_questions} unique questions
-- Each question must test DIFFERENT and DISTINCT aspects of the topic
-- NO two questions should cover the same concept or ask about the same thing
-- Questions should vary significantly in focus, approach, and subject matter
-- Questions should be appropriate for oral examination (encourage discussion)
-- Provide detailed rubrics for each question
-- Respond with VALID JSON ONLY
-- Do NOT include explanations or extra text outside the JSON object
+CRITICAL REQUIREMENTS:
 
-CRITICAL: Before finalizing your response, review all questions to ensure:
-- No two questions ask about the same concept
-- No two questions are rewordings of each other
-- Each question tests a genuinely different aspect of the topic
-- Questions cover diverse sub-topics and perspectives
+1. UNIQUENESS - Each question MUST be completely different:
+   - NO repeating the same concept in different words
+   - NO asking about the same data structure/concept multiple times
+   - Each question explores a DIFFERENT facet of the topic
+   - Cover diverse sub-topics, perspectives, and approaches
+   - Example: If topic is "Data Structures", don't ask about hash tables twice
+   - Instead: Ask about hash tables, then arrays, then trees, then graphs, etc.
+
+2. RUBRIC FORMAT - MUST be a STRING, not a dictionary:
+   ✅ CORRECT: "rubric": "Grading: Understanding (25 points), Application (25 points), Examples (25 points), Analysis (25 points). Total: 100 points."
+   ❌ WRONG: "rubric": {{"Understanding": 25, "Application": 25}}
+   
+3. JSON FORMAT:
+   - Generate exactly {num_questions} questions
+   - Number sequentially from 1 to {num_questions}
+   - All fields must be strings (question_text, context, rubric)
+   - Valid JSON only, no markdown code blocks
+
+BEFORE FINALIZING:
+- Review all questions to ensure uniqueness
+- Verify all rubrics are strings
+- Check question numbers are sequential
+- Ensure JSON is valid
 
 Required JSON format:
 {{
@@ -239,7 +249,7 @@ Required JSON format:
       "question_number": 1,
       "question_text": "string",
       "context": "string",
-      "rubric": "string"
+      "rubric": "string (NOT a dictionary)"
     }},
     // ... more questions
   ]
@@ -251,6 +261,19 @@ Required JSON format:
             try:
                 logger.info(f"Generating exam, attempt {attempt+1}")
                 response_dict = await self.llm_client.generate_json(prompt, system_prompt)
+                
+                # Fix rubric format if LLM returned dictionaries instead of strings
+                if "questions" in response_dict:
+                    for q in response_dict["questions"]:
+                        if "rubric" in q and isinstance(q["rubric"], dict):
+                            # Convert dictionary rubric to string
+                            rubric_dict = q["rubric"]
+                            rubric_parts = []
+                            for key, value in rubric_dict.items():
+                                rubric_parts.append(f"{key}: {value} points")
+                            q["rubric"] = "Grading criteria: " + ", ".join(rubric_parts) + ". Total: " + str(sum(rubric_dict.values())) + " points."
+                            logger.info(f"Converted rubric dictionary to string for question {q.get('question_number', '?')}")
+                
                 exam = validate_response(response_dict, GeneratedExam)
                 
                 if not exam:
