@@ -99,8 +99,10 @@ class LLMClient:
 
         result_text = await loop.run_in_executor(None, call_llm_with_retry)
 
-        # Clean up response - remove markdown code fences if present
+        # Clean up response - extract JSON even if there's text before/after
         cleaned_text = result_text.strip()
+        
+        # Remove markdown code fences if present
         if cleaned_text.startswith("```"):
             # Remove opening code fence (```json or ```)
             cleaned_text = cleaned_text.split("\n", 1)[1] if "\n" in cleaned_text else cleaned_text[3:]
@@ -108,6 +110,26 @@ class LLMClient:
             if cleaned_text.endswith("```"):
                 cleaned_text = cleaned_text[:-3]
             cleaned_text = cleaned_text.strip()
+        
+        # Try to find JSON object in the response (in case there's explanatory text)
+        # Look for the first { and last } to extract JSON
+        first_brace = cleaned_text.find('{')
+        if first_brace != -1:
+            # Find the matching closing brace
+            brace_count = 0
+            last_brace = -1
+            for i in range(first_brace, len(cleaned_text)):
+                if cleaned_text[i] == '{':
+                    brace_count += 1
+                elif cleaned_text[i] == '}':
+                    brace_count -= 1
+                    if brace_count == 0:
+                        last_brace = i
+                        break
+            
+            if last_brace != -1:
+                # Extract the JSON portion
+                cleaned_text = cleaned_text[first_brace:last_brace + 1]
         
         # Attempt to parse JSON
         try:

@@ -1,5 +1,11 @@
 You are an expert computer science professor creating a comprehensive oral exam.
 
+IMPORTANT: 
+- Respond ONLY in English
+- Respond with ONLY the JSON object - no explanatory text before or after
+- Do NOT include any comments, explanations, or additional text
+- Start your response directly with {{ and end with }}
+
 Topic: {topic}
 Number of Questions: {num_questions}
 {additional_details_section}

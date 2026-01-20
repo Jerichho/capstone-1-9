@@ -212,6 +212,8 @@ Required JSON format:
         
         system_prompt = f"""You are an expert computer science professor creating a comprehensive oral exam.
 
+IMPORTANT: Respond ONLY in English. Do NOT include any explanatory text before or after the JSON. Respond with ONLY the JSON object, nothing else.
+
 Topic: {topic}
 Number of Questions: {num_questions}
 {f'Additional Details: {additional_details}' if additional_details else ''}
