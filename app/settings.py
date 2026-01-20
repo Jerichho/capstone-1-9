@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     
     # Together.ai API Configuration
     together_api_key: str = ""
-    llm_model: str = "meta-llama/Llama-3.2-3B-Instruct-Turbo"  # Serverless model - check https://api.together.ai/models for available models
+    llm_model: str = "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"  # Serverless model (no dedicated endpoint needed)
     llm_temperature: float = 0.7
     llm_max_tokens: int = 2000
     
