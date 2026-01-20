@@ -139,6 +139,27 @@
         </div>
         {% endif %}
 
+        {% if success %}
+        <div style="background-color: #e7f3ff; color: #1976D2; padding: 12px 20px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #90caf9;">
+            {{ success }}
+        </div>
+        {% endif %}
+
+        {% if not is_enrolled %}
+        <!-- Registration Section -->
+        <div class="exams-section" style="text-align: center; padding: 40px;">
+            <h2 style="margin-bottom: 20px;">Register for {{ course_number }} - Section {{ section }}</h2>
+            <p style="color: #666; margin-bottom: 30px; font-size: 1.1em;">
+                You are not enrolled in this course yet. Register to view and take exams.
+            </p>
+            <form method="post" action="/student/course/{{ course_number }}/{{ section }}/register">
+                <button type="submit" style="background-color: #4CAF50; color: white; padding: 15px 40px; border: none; border-radius: 4px; font-size: 1.1em; cursor: pointer; font-weight: 600;">
+                    Register for this Course
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <!-- Open Exams Section -->
         <div class="exams-section">
             <h2>Open Exams</h2>
             {% if open_exams %}
@@ -163,6 +184,7 @@
             <p class="no-exams">No open exams available for this course</p>
             {% endif %}
         </div>
+        {% endif %}
     </div>
 </body>
 </html>

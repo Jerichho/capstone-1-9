@@ -31,6 +31,7 @@ class Student(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     exams = relationship("Exam", back_populates="student")
+    enrollments = relationship("Enrollment", back_populates="student")
 
 
 class Exam(Base):
@@ -102,9 +103,29 @@ class Course(Base):
     
     # Relationships
     instructor = relationship("User", back_populates="courses")
+    enrollments = relationship("Enrollment", back_populates="course")
     
     # Composite unique constraint: same course_number + section + quarter_year should be unique per instructor
     __table_args__ = (
         UniqueConstraint('course_number', 'section', 'quarter_year', 'instructor_id', name='uq_course_instructor'),
+    )
+
+
+class Enrollment(Base):
+    """Student course enrollment model."""
+    __tablename__ = "enrollments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=False, index=True)
+    enrolled_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    student = relationship("Student", back_populates="enrollments")
+    course = relationship("Course", back_populates="enrollments")
+    
+    # Composite unique constraint: student can only enroll once per course
+    __table_args__ = (
+        UniqueConstraint('student_id', 'course_id', name='uq_student_course_enrollment'),
     )
 

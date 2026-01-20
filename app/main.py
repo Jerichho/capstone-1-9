@@ -10,7 +10,7 @@ from datetime import datetime, timezone, timedelta
 from app.api.router import api_router
 from app.db.base import Base, engine
 from app.db.session import get_db
-from app.db.models import User, Course, Exam, Student
+from app.db.models import User, Course, Exam, Student, Enrollment
 from app.logging_config import setup_logging
 
 # Import seeding function
@@ -67,37 +67,22 @@ async def student_dashboard(request: Request, db: Session = Depends(get_db)):
     # Get or create Student record
     student_record = db.query(Student).filter(Student.username == user.email).first()
     
-    # Get student's courses (unique course_number, section, quarter_year combinations from their exams)
+    # Get student's enrolled courses
     student_courses = []
     if student_record:
-        # Get distinct courses from exams the student has taken/started
-        from sqlalchemy import distinct, func
-        student_exams = db.query(
-            Exam.course_number,
-            Exam.section,
-            Exam.quarter_year
-        ).filter(
-            Exam.student_id == student_record.id
-        ).distinct().all()
+        # Get enrollments for this student
+        enrollments = db.query(Enrollment).filter(
+            Enrollment.student_id == student_record.id
+        ).all()
         
-        # Convert to list of dicts for template
-        seen_courses = set()
-        for exam in student_exams:
-            course_key = (exam.course_number, exam.section, exam.quarter_year)
-            if course_key not in seen_courses:
-                seen_courses.add(course_key)
-                # Get the Course record if it exists
-                course = db.query(Course).filter(
-                    Course.course_number == exam.course_number,
-                    Course.section == exam.section,
-                    Course.quarter_year == exam.quarter_year
-                ).first()
-                
+        for enrollment in enrollments:
+            course = enrollment.course
+            if course:  # Course might be deleted
                 student_courses.append({
-                    "course_number": exam.course_number,
-                    "section": exam.section,
-                    "quarter_year": exam.quarter_year,
-                    "course": course  # May be None if course was deleted
+                    "course_number": course.course_number,
+                    "section": course.section,
+                    "quarter_year": course.quarter_year,
+                    "course": course
                 })
     
     # Get open exams available to the student (published, not terminated, template exams)
@@ -293,7 +278,7 @@ async def student_course_page(
     section: str,
     db: Session = Depends(get_db)
 ):
-    """Display course page with open exams for students."""
+    """Display course page with registration option or open exams for students."""
     # Get email from cookie
     email = request.cookies.get("username")
     if not email:
@@ -313,6 +298,39 @@ async def student_course_page(
     if not course:
         return RedirectResponse(url="/student/dashboard?error=course_not_found", status_code=302)
     
+    # Get or create Student record for this user
+    student_record = db.query(Student).filter(Student.username == user.email).first()
+    if not student_record:
+        student_record = Student(username=user.email)
+        db.add(student_record)
+        db.commit()
+        db.refresh(student_record)
+    
+    # Check if student is enrolled in this course
+    enrollment = db.query(Enrollment).filter(
+        Enrollment.student_id == student_record.id,
+        Enrollment.course_id == course.id
+    ).first()
+    
+    is_enrolled = enrollment is not None
+    
+    # If not enrolled, show registration page
+    if not is_enrolled:
+        error = request.query_params.get("error", "")
+        success = request.query_params.get("success", "")
+        return render_template("student_course_page.html", {
+            "request": request,
+            "course_number": course_number.upper(),
+            "section": section,
+            "quarter_year": course.quarter_year,
+            "course": course,
+            "is_enrolled": False,
+            "open_exams": [],
+            "error": error,
+            "success": success
+        })
+    
+    # Student is enrolled - show open exams
     # Query open exams for this course/section (published, not terminated)
     # Only show template exams (instructor-created exams with no student_id)
     open_exams = db.query(Exam).filter(
@@ -324,27 +342,20 @@ async def student_course_page(
         Exam.student_id.is_(None)  # Only template exams (not student-specific)
     ).order_by(Exam.date_published.desc()).all()
     
-    # Get or create Student record for this user
-    student_record = db.query(Student).filter(Student.username == user.email).first()
-    
     # Filter out exams that this student has already completed
     available_exams = []
     for exam in open_exams:
         # Check if this student has already taken this exam
-        if student_record:
-            existing_student_exam = db.query(Exam).filter(
-                Exam.course_number == exam.course_number,
-                Exam.section == exam.section,
-                Exam.exam_name == exam.exam_name,
-                Exam.quarter_year == exam.quarter_year,
-                Exam.student_id == student_record.id,
-                Exam.status == "completed"
-            ).first()
-            
-            if not existing_student_exam:
-                available_exams.append(exam)
-        else:
-            # Student record doesn't exist yet, show all exams
+        existing_student_exam = db.query(Exam).filter(
+            Exam.course_number == exam.course_number,
+            Exam.section == exam.section,
+            Exam.exam_name == exam.exam_name,
+            Exam.quarter_year == exam.quarter_year,
+            Exam.student_id == student_record.id,
+            Exam.status == "completed"
+        ).first()
+        
+        if not existing_student_exam:
             available_exams.append(exam)
     
     error = request.query_params.get("error", "")
@@ -354,9 +365,68 @@ async def student_course_page(
         "course_number": course_number.upper(),
         "section": section,
         "quarter_year": course.quarter_year,
+        "course": course,
+        "is_enrolled": True,
         "open_exams": available_exams,
         "error": error
     })
+
+@app.post("/student/course/{course_number}/{section}/register")
+async def student_register_course(
+    request: Request,
+    course_number: str,
+    section: str,
+    db: Session = Depends(get_db)
+):
+    """Register student for a course."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "student":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get course from database
+    course = db.query(Course).filter(
+        Course.course_number == course_number.upper(),
+        Course.section == section
+    ).first()
+    
+    if not course:
+        return RedirectResponse(url=f"/student/course/{course_number}/{section}?error=course_not_found", status_code=302)
+    
+    # Get or create Student record for this user
+    student_record = db.query(Student).filter(Student.username == user.email).first()
+    if not student_record:
+        student_record = Student(username=user.email)
+        db.add(student_record)
+        db.commit()
+        db.refresh(student_record)
+    
+    # Check if already enrolled
+    existing_enrollment = db.query(Enrollment).filter(
+        Enrollment.student_id == student_record.id,
+        Enrollment.course_id == course.id
+    ).first()
+    
+    if existing_enrollment:
+        return RedirectResponse(url=f"/student/course/{course_number}/{section}?error=already_enrolled", status_code=302)
+    
+    # Create enrollment
+    try:
+        enrollment = Enrollment(
+            student_id=student_record.id,
+            course_id=course.id
+        )
+        db.add(enrollment)
+        db.commit()
+        return RedirectResponse(url=f"/student/course/{course_number}/{section}?success=enrolled", status_code=302)
+    except IntegrityError:
+        db.rollback()
+        return RedirectResponse(url=f"/student/course/{course_number}/{section}?error=enrollment_failed", status_code=302)
 
 @app.get("/student/exam/{exam_id}", response_class=HTMLResponse)
 async def student_exam_details_page(
