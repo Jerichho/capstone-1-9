@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Exam - Teacher Portal</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .create-exam-card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .create-exam-card h1 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        .form-group textarea {
+            min-height: 300px;
+            resize: vertical;
+        }
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #999;
+        }
+        .course-select-group {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 15px;
+        }
+        
+        .section-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            transition: background-color 0.2s;
+        }
+        
+        .section-checkbox:hover {
+            background-color: #e9ecef;
+            border-color: #4CAF50;
+        }
+        
+        .section-checkbox input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        
+        .section-checkbox label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+            flex: 1;
+            user-select: none;
+        }
+        .exam-name-group {
+            margin-top: 20px;
+        }
+        .llm-prompt-group {
+            margin-top: 30px;
+        }
+        .llm-prompt-group textarea {
+            min-height: 250px;
+            padding: 15px;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            flex: 1;
+        }
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+        .btn-primary:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: #666;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            flex: 1;
+        }
+        .btn-secondary:hover {
+            background-color: #555;
+        }
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #ffe6e6;
+            border-radius: 4px;
+        }
+        .info-text {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .back-link {
+            color: #4CAF50;
+            text-decoration: none;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/teacher/dashboard" class="back-link">← Back to Dashboard</a>
+        
+        <div class="create-exam-card">
+            <h1>Create New Exam</h1>
+            
+            {% if error %}
+            <div class="error-message">
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <form method="post" action="/teacher/create-exam" id="create-exam-form">
+                <!-- Course Selection -->
+                <div class="form-group">
+                    <label>Course / Section / Quarter:</label>
+                    <div class="course-select-group">
+                        <div>
+                            <label for="course_number" style="margin-bottom: 8px;">Course Number:</label>
+                            <select id="course_number" name="course_number" required onchange="updateSections()">
+                                <option value="">Select Course</option>
+                                {% for course_num in unique_course_numbers %}
+                                <option value="{{ course_num }}">{{ course_num }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div style="grid-column: 2; grid-row: 1 / 3;">
+                            <label style="margin-bottom: 8px;">Sections (select all that apply):</label>
+                            <div id="sections-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 5px; max-height: 200px; overflow-y: auto;">
+                                <!-- Sections will be populated here as checkboxes -->
+                            </div>
+                            <p class="info-text" style="margin-top: 10px; font-size: 0.85em;">Select one or more sections from the same quarter/year</p>
+                        </div>
+                        <div style="grid-column: 1; grid-row: 2;">
+                            <label for="quarter_year" style="margin-bottom: 8px;">Quarter / Year:</label>
+                            <select id="quarter_year" name="quarter_year" required>
+                                <option value="">Select Quarter/Year</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Exam Name -->
+                <div class="form-group exam-name-group">
+                    <label for="exam_name">Exam Name:</label>
+                    <input 
+                        type="text" 
+                        id="exam_name" 
+                        name="exam_name" 
+                        required 
+                        placeholder="e.g. Midterm"
+                        autocomplete="off"
+                    >
+                </div>
+                
+                <!-- Topic and Number of Questions -->
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <label for="exam_topic">Exam Topic: <span style="color: red;">*</span></label>
+                        <input 
+                            type="text" 
+                            id="exam_topic" 
+                            name="exam_topic" 
+                            required 
+                            placeholder="e.g. Data Structures and Algorithms"
+                            autocomplete="off"
+                        >
+                        <p class="info-text">The main topic or subject area for the exam</p>
+                    </div>
+                    <div>
+                        <label for="num_questions">Number of Questions: <span style="color: red;">*</span></label>
+                        <input 
+                            type="number" 
+                            id="num_questions" 
+                            name="num_questions" 
+                            required 
+                            min="1" 
+                            max="30"
+                            value="5"
+                            autocomplete="off"
+                        >
+                        <p class="info-text">How many questions should the exam contain (1-30)</p>
+                    </div>
+                </div>
+                
+                <!-- Timed Exam Selection -->
+                <div class="form-group">
+                    <label>Timed Exam:</label>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: inline-flex; align-items: center; margin-right: 20px;">
+                            <input type="radio" name="is_timed" value="no" checked onchange="toggleDurationFields()" style="margin-right: 8px;">
+                            No
+                        </label>
+                        <label style="display: inline-flex; align-items: center;">
+                            <input type="radio" name="is_timed" value="yes" onchange="toggleDurationFields()" style="margin-right: 8px;">
+                            Yes
+                        </label>
+                    </div>
+                    <div id="duration-fields" style="display: none; margin-top: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
+                        <label style="margin-bottom: 8px; display: block;">Exam Duration:</label>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <div>
+                                <select id="duration_hours" name="duration_hours" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="0">0</option>
+                                    <option value="1">1</option>
+                                    <option value="2" selected>2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                </select>
+                                <label for="duration_hours" style="margin-left: 5px;">hours</label>
+                            </div>
+                            <div>
+                                <select id="duration_minutes" name="duration_minutes" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="0" selected>0</option>
+                                    <option value="15">15</option>
+                                    <option value="30">30</option>
+                                    <option value="45">45</option>
+                                </select>
+                                <label for="duration_minutes" style="margin-left: 5px;">minutes</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Additional Details Input -->
+                <div class="form-group llm-prompt-group">
+                    <label for="llm_prompt">Additional Details (Optional but Recommended):</label>
+                    <textarea 
+                        id="llm_prompt" 
+                        name="llm_prompt" 
+                        placeholder="Please enter rubric, grading criteria, specific sub-topics, questions you want included, expected answers, or any further expectations. The AI can create a good exam from just the topic, but additional details will result in a stronger, more tailored exam."
+                    ></textarea>
+                    <p class="info-text">Provide additional context such as: rubric, grading criteria, specific sub-topics, questions you want included, expected answers, or any other expectations. This is optional - the AI can create a good exam from just the topic, but more details will result in a better exam.</p>
+                </div>
+                
+                <div class="button-group">
+                    <a href="/teacher/dashboard" class="btn-secondary">Cancel</a>
+                    <button type="submit" class="btn-primary" id="generate-btn">Generate and Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Store courses data for JavaScript
+        const coursesData = [
+            {% for course in all_courses %}
+            {
+                course_number: "{{ course.course_number }}",
+                section: "{{ course.section }}",
+                quarter_year: "{{ course.quarter_year }}"
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        function updateSections() {
+            const courseSelect = document.getElementById('course_number');
+            const sectionsContainer = document.getElementById('sections-container');
+            const quarterSelect = document.getElementById('quarter_year');
+            
+            const selectedCourse = courseSelect.value;
+            
+            // Clear sections and quarters
+            sectionsContainer.innerHTML = '';
+            quarterSelect.innerHTML = '<option value="">Select Quarter/Year</option>';
+            
+            if (!selectedCourse) return;
+            
+            // Get unique sections and quarter/years for this course
+            const sectionsByQuarter = {};
+            const quarterYears = new Set();
+            
+            coursesData.forEach(course => {
+                if (course.course_number === selectedCourse) {
+                    quarterYears.add(course.quarter_year);
+                    // Group sections by quarter/year
+                    if (!sectionsByQuarter[course.quarter_year]) {
+                        sectionsByQuarter[course.quarter_year] = new Set();
+                    }
+                    sectionsByQuarter[course.quarter_year].add(course.section);
+                }
+            });
+            
+            // Create checkboxes for each section
+            Object.keys(sectionsByQuarter).sort().forEach(quarter => {
+                Array.from(sectionsByQuarter[quarter]).sort().forEach(section => {
+                    const checkboxDiv = document.createElement('div');
+                    checkboxDiv.className = 'section-checkbox';
+                    checkboxDiv.innerHTML = `
+                        <input type="checkbox" id="section_${section}_${quarter}" name="sections[]" value="${section}" data-quarter="${quarter}">
+                        <label for="section_${section}_${quarter}">Section ${section}</label>
+                    `;
+                    sectionsContainer.appendChild(checkboxDiv);
+                });
+            });
+            
+            // Populate quarter/years dropdown
+            Array.from(quarterYears).sort().forEach(qy => {
+                const option = document.createElement('option');
+                option.value = qy;
+                option.textContent = qy;
+                quarterSelect.appendChild(option);
+            });
+            
+            // Auto-select quarter/year if only one option
+            if (quarterYears.size === 1) {
+                quarterSelect.value = Array.from(quarterYears)[0];
+            }
+            
+            // Update quarter when section checkbox changes (ensure consistency)
+            // Track selected quarter to ensure all sections are from the same quarter
+            let selectedQuarter = null;
+            document.querySelectorAll('input[name="sections[]"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const quarter = this.getAttribute('data-quarter');
+                    
+                    if (this.checked) {
+                        // If no quarter selected yet, set it
+                        if (!selectedQuarter) {
+                            selectedQuarter = quarter;
+                            quarterSelect.value = quarter;
+                            // Disable checkboxes from other quarters
+                            document.querySelectorAll('input[name="sections[]"]').forEach(cb => {
+                                if (cb.getAttribute('data-quarter') !== quarter) {
+                                    cb.disabled = true;
+                                    cb.parentElement.style.opacity = '0.5';
+                                }
+                            });
+                        } else if (quarter !== selectedQuarter) {
+                            // Trying to select section from different quarter - uncheck it
+                            this.checked = false;
+                            alert(`Please select sections from the same quarter/year (${selectedQuarter}).`);
+                        }
+                    } else {
+                        // Unchecked - check if any other sections are still selected
+                        const checkedBoxes = document.querySelectorAll('input[name="sections[]"]:checked');
+                        if (checkedBoxes.length === 0) {
+                            // No sections selected, reset everything
+                            selectedQuarter = null;
+                            quarterSelect.value = '';
+                            document.querySelectorAll('input[name="sections[]"]').forEach(cb => {
+                                cb.disabled = false;
+                                cb.parentElement.style.opacity = '1';
+                            });
+                        }
+                    }
+                });
+            });
+        }
+
+        // Update sections when course changes
+        document.getElementById('course_number').addEventListener('change', updateSections);
+        
+        // Toggle duration fields based on timed selection
+        function toggleDurationFields() {
+            const isTimedRadio = document.querySelector('input[name="is_timed"]:checked');
+            if (!isTimedRadio) return;
+            
+            const isTimed = isTimedRadio.value === 'yes';
+            const durationFields = document.getElementById('duration-fields');
+            if (durationFields) {
+                durationFields.style.display = isTimed ? 'block' : 'none';
+                
+                // Make duration required if timed
+                const hoursSelect = document.getElementById('duration_hours');
+                const minutesSelect = document.getElementById('duration_minutes');
+                if (hoursSelect) hoursSelect.required = isTimed;
+                if (minutesSelect) minutesSelect.required = isTimed;
+            }
+        }
+        
+        // Make function globally accessible
+        window.toggleDurationFields = toggleDurationFields;
+        
+        // Initialize duration fields visibility on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', toggleDurationFields);
+        } else {
+            // DOM already loaded
+            toggleDurationFields();
+        }
+        
+        // Validate at least one section is selected on form submit
+        document.getElementById('create-exam-form').addEventListener('submit', function(e) {
+            console.log('Form submit event triggered');
+            const checkedSections = document.querySelectorAll('input[name="sections[]"]:checked');
+            console.log('Checked sections:', checkedSections.length);
+            
+            if (checkedSections.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one section.');
+                return false;
+            }
+            
+            // Validate duration if timed
+            const isTimed = document.querySelector('input[name="is_timed"]:checked').value === 'yes';
+            if (isTimed) {
+                const hours = parseInt(document.getElementById('duration_hours').value) || 0;
+                const minutes = parseInt(document.getElementById('duration_minutes').value) || 0;
+                if (hours === 0 && minutes === 0) {
+                    e.preventDefault();
+                    alert('Please select a duration for the timed exam.');
+                    return false;
+                }
+            }
+            
+            // Log form data being submitted
+            const formData = new FormData(this);
+            console.log('Form data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}: ${value}`);
+            }
+        });
+    </script>
+</body>
+</html>

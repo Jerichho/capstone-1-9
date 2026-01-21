@@ -5,8 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Question {{ question_number }} - AI Oral Exam Grader</title>
     <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .timer-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .timer-container.warning {
+            border-color: #ff9800;
+            background: #fff3cd;
+            animation: pulse 1s infinite;
+        }
+        .timer-container.critical {
+            border-color: #f44336;
+            background: #ffebee;
+            animation: pulse 0.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        .timer-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        .timer-display {
+            font-size: 24px;
+            color: #333;
+        }
+        .timer-warning {
+            margin-top: 10px;
+            padding: 10px;
+            background: #ff9800;
+            color: white;
+            border-radius: 4px;
+            display: none;
+        }
+        .timer-warning.show {
+            display: block;
+        }
+        .timer-warning.critical {
+            background: #f44336;
+        }
+    </style>
 </head>
 <body>
+    {% if is_timed and exam_end_time %}
+    <div class="timer-container" id="timerContainer">
+        <div class="timer-label">Time Remaining</div>
+        <div class="timer-display" id="timerDisplay">--:--:--</div>
+        <div class="timer-warning" id="timerWarning"></div>
+    </div>
+    {% endif %}
+    
     <div class="container">
         <div class="exam-header">
             <h1>Question {{ question_number }} of {{ total_questions }}</h1>
@@ -82,161 +143,82 @@
         </div>
     </div>
     
+    {% if is_timed and exam_end_time %}
     <script>
-        {% if time_limit_type and time_limit_type != 'none' and time_limit_minutes %}
-        // Time limit functionality
-        const examId = {{ exam_id }};
-        const questionNumber = {{ question_number }};
-        let timeRemaining = {{ time_limit_minutes }} * 60; // Convert to seconds
-        let timerInterval = null;
-        let examStartTime = null;
-        
-        // Check if this is per-question or total exam time
-        const isPerQuestion = '{{ time_limit_type }}' === 'per_question';
-        
-        // Initialize timer
-        function initTimer() {
-            // Get start time from sessionStorage or set it
-            const storageKey = isPerQuestion ? 
-                `question_start_${examId}_${questionNumber}` : 
-                `exam_start_${examId}`;
+        (function() {
+            const examEndTime = new Date('{{ exam_end_time }}').getTime();
+            const timerDisplay = document.getElementById('timerDisplay');
+            const timerContainer = document.getElementById('timerContainer');
+            const timerWarning = document.getElementById('timerWarning');
+            let warned20Min = false;
+            let warned2Min = false;
             
-            const storedStart = sessionStorage.getItem(storageKey);
-            if (storedStart) {
-                // Calculate elapsed time
-                const elapsed = Math.floor((Date.now() - parseInt(storedStart)) / 1000);
-                timeRemaining = {{ time_limit_minutes }} * 60 - elapsed;
-            } else {
-                // Set start time
-                sessionStorage.setItem(storageKey, Date.now().toString());
+            function updateTimer() {
+                const now = new Date().getTime();
+                const timeLeft = examEndTime - now;
+                
+                if (timeLeft <= 0) {
+                    // Time is up - auto-submit
+                    timerDisplay.textContent = '00:00:00';
+                    timerWarning.textContent = 'Time is up! Your exam will be submitted automatically.';
+                    timerWarning.classList.add('show', 'critical');
+                    timerContainer.classList.add('critical');
+                    
+                    // Auto-submit after 2 seconds
+                    setTimeout(() => {
+                        const form = document.querySelector('.answer-form');
+                        if (form) {
+                            // Submit current answer if any, otherwise just submit empty
+                            const answerTextarea = document.getElementById('answer');
+                            if (!answerTextarea.value.trim()) {
+                                answerTextarea.value = '[No answer provided - time expired]';
+                            }
+                            form.submit();
+                        }
+                    }, 2000);
+                    return;
+                }
+                
+                // Calculate time components
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                
+                // Format display
+                timerDisplay.textContent = 
+                    String(hours).padStart(2, '0') + ':' +
+                    String(minutes).padStart(2, '0') + ':' +
+                    String(seconds).padStart(2, '0');
+                
+                // Update styling based on time remaining
+                const minutesLeft = Math.floor(timeLeft / (1000 * 60));
+                
+                if (minutesLeft <= 2) {
+                    // Less than 2 minutes - critical warning
+                    timerContainer.classList.remove('warning');
+                    timerContainer.classList.add('critical');
+                    if (!warned2Min) {
+                        warned2Min = true;
+                        timerWarning.textContent = 'WARNING: Less than 2 minutes remaining!';
+                        timerWarning.classList.add('show', 'critical');
+                    }
+                } else if (minutesLeft <= 20) {
+                    // Less than 20 minutes - warning
+                    timerContainer.classList.add('warning');
+                    if (!warned20Min) {
+                        warned20Min = true;
+                        timerWarning.textContent = 'Warning: Less than 20 minutes remaining.';
+                        timerWarning.classList.add('show');
+                    }
+                }
             }
             
-            // Start timer
+            // Update timer every second
             updateTimer();
-            timerInterval = setInterval(updateTimer, 1000);
-        }
-        
-        function updateTimer() {
-            if (timeRemaining <= 0) {
-                clearInterval(timerInterval);
-                handleTimeUp();
-                return;
-            }
-            
-            const minutes = Math.floor(timeRemaining / 60);
-            const seconds = timeRemaining % 60;
-            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            document.getElementById('timer').textContent = display;
-            
-            // Change color when time is running low
-            if (timeRemaining <= 60) {
-                document.getElementById('timer').style.color = '#dc3545';
-            } else if (timeRemaining <= 300) {
-                document.getElementById('timer').style.color = '#ffc107';
-            }
-            
-            timeRemaining--;
-        }
-        
-        function handleTimeUp() {
-            const timerEl = document.getElementById('timer');
-            if (timerEl) {
-                timerEl.textContent = '00:00';
-                timerEl.style.color = '#dc3545';
-            }
-
-            // Build a lightweight overlay instead of a blocking alert
-            const overlay = document.createElement('div');
-            overlay.style.cssText = `
-                position: fixed; inset: 0; z-index: 9999;
-                background: rgba(17, 24, 39, 0.55);
-                display: flex; align-items: center; justify-content: center;
-                padding: 20px;
-            `;
-            overlay.innerHTML = `
-                <div style="
-                    width: 100%; max-width: 520px;
-                    background: white; border-radius: 14px;
-                    padding: 20px 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-                    border: 1px solid #eef0f3;
-                ">
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                        <div style="width:10px; height:10px; border-radius:999px; background:#dc3545;"></div>
-                        <div style="font-weight:800; font-size:16px; color:#111827;">Time is up</div>
-                    </div>
-                    <div style="color:#374151; font-size:14px; line-height:1.5;">
-                        Your answer is being submitted automatically.
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-
-            // Disable inputs to avoid confusion while submitting
-            const answerInput = document.getElementById('answer');
-            if (answerInput) answerInput.setAttribute('disabled', 'disabled');
-            const submitBtn = document.querySelector('.answer-form button[type="submit"]');
-            if (submitBtn) submitBtn.setAttribute('disabled', 'disabled');
-
-            // Auto-submit the form
-            const form = document.querySelector('.answer-form');
-            if (form) {
-                if (answerInput && !answerInput.value.trim()) {
-                    answerInput.value = '[No answer provided - time expired]';
-                    answerInput.removeAttribute('disabled'); // allow value to be posted
-                }
-                form.submit();
-            }
-        }
-        
-        // Initialize timer when page loads
-        window.addEventListener('DOMContentLoaded', function() {
-            initTimer();
-        });
-        
-        // Clean up timer when leaving page
-        window.addEventListener('beforeunload', function() {
-            if (timerInterval) {
-                clearInterval(timerInterval);
-            }
-        });
-        {% endif %}
-        
-        function clearTimerKeys() {
-            // Clear all timer keys for this exam (both total and per-question)
-            try {
-                const examKey = `exam_start_${examId}`;
-                sessionStorage.removeItem(examKey);
-                // Remove any per-question keys for this exam
-                const prefix = `question_start_${examId}_`;
-                for (let i = sessionStorage.length - 1; i >= 0; i--) {
-                    const k = sessionStorage.key(i);
-                    if (k && k.startsWith(prefix)) sessionStorage.removeItem(k);
-                }
-            } catch (e) {}
-        }
-
-        function onSubmitAnswer() {
-            // For per-question timers, clear this question's key on submit so next question starts fresh
-            {% if time_limit_type and time_limit_type == 'per_question' and time_limit_minutes %}
-            try {
-                sessionStorage.removeItem(`question_start_${examId}_${questionNumber}`);
-            } catch (e) {}
-            {% endif %}
-            return true;
-        }
-
-        function confirmExit() {
-            if (confirm('Are you sure you want to exit the test? This will end the test and you will be returned to the home page.')) {
-                // Clear timer keys so a new attempt doesn't reuse stale time
-                {% if time_limit_type and time_limit_type != 'none' and time_limit_minutes %}
-                clearTimerKeys();
-                {% endif %}
-                return true;
-            }
-            return false;
-        }
+            setInterval(updateTimer, 1000);
+        })();
     </script>
+    {% endif %}
 </body>
 </html>
 

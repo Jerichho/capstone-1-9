@@ -8,112 +8,336 @@
         body {
             background-color: #f5f5f5;
             font-family: Arial, sans-serif;
-            height: 100vh;
             margin: 0;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dashboard-header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
         }
 
-        .dashboard-card {
-            background: white;
-            width: 400px;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            text-align: center;
+        .dashboard-header h1 {
+            margin: 0;
+            color: #333;
         }
 
-        .dashboard-card h1 {
-            margin-bottom: 25px;
-        }
-
-        /* Exam code input */
-        .exam-code-input {
-            width: 100%;
-            max-width: 180px;
-            padding: 10px;
-            font-size: 16px;
-            display: block;
-            margin: 0 auto 12px auto;
-            text-align: center;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background-color: #f2f2f2;
-            color: #555;
-        }
-
-        /* Submit button under exam code */
-        .submit-button {
-            width: 30%;
-            padding: 6px 0;
-            font-size: 14px;
-            display: block;
-            margin: 0 auto 18px auto;
-            cursor: pointer;
-        }
-
-        /* Exam preview box */
-        .exam-preview-box {
-            width: 100%;
-            max-width: 180px;
-            padding: 10px;
-            margin: 0 auto 15px auto;
-            text-align: center;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background-color: #f2f2f2;
-            color: #555;
-            box-sizing: border-box;
-        }
-
-        .logout {
-            display: block;
-            margin: 15px 0;
+        .logout-link {
+            color: #666;
+            text-decoration: none;
             font-size: 0.9em;
         }
 
-        .register-button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
+        .logout-link:hover {
+            color: #000;
+        }
+
+        .error-message {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            padding: 12px 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #ff9999;
+        }
+
+        .dashboard-section {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .dashboard-section h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.5em;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+
+        .course-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 15px 0;
+        }
+
+        .course-list li {
+            padding: 12px;
+            margin-bottom: 8px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .course-list li a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.05em;
+        }
+
+        .course-list li a:hover {
+            text-decoration: underline;
+        }
+
+        .no-courses {
+            color: #666;
+            font-style: italic;
+            margin: 15px 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 0.95em;
+            margin-top: 10px;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .exams-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .exams-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        .exams-table th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .exams-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .exams-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .exams-table tr a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+
+        .exams-table tr a:hover {
+            text-decoration: underline;
+        }
+
+        .status-active {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            color: #2196F3;
+            font-weight: bold;
+        }
+
+        .status-not-started {
+            color: #ff9800;
+            font-weight: bold;
+        }
+
+        .status-terminated {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .status-closed {
+            color: #666;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>Welcome, {{ first_name }}</h1>
+            <a href="/" class="logout-link">Logout</a>
+        </div>
 
-<div class="dashboard-card">
-    <!-- Welcome Header -->
-    <h1>Welcome, Student</h1>
+        {% if error %}
+        <div class="error-message">
+            {{ error }}
+        </div>
+        {% endif %}
 
-    <!-- Exam Code Input -->
-    <input
-        type="text"
-        id="exam_code"
-        name="exam_code"
-        placeholder="Enter Exam Code"
-        class="exam-code-input"
-    >
+        <!-- Your Courses Section -->
+        <div class="dashboard-section">
+            <h2>Your Courses</h2>
+            {% if student_courses %}
+            <ul class="course-list">
+                {% for course in student_courses %}
+                <li>
+                    <a href="/student/course/{{ course.course_number }}/{{ course.section }}">
+                        {{ course.course_number }} - Section {{ course.section }} ({{ course.quarter_year }})
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="no-courses">You have no courses yet</p>
+            {% endif %}
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+                <h3 style="font-size: 1em; margin-bottom: 10px; color: #666;">Find a Course</h3>
+                <form method="get" action="/student/search-course" style="display: flex; gap: 10px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Course Number</label>
+                        <input
+                            type="text"
+                            name="course_number"
+                            placeholder="e.g. CSC299"
+                            style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box;"
+                            required
+                        >
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 5px; font-size: 0.9em; color: #666;">Section</label>
+                        <input
+                            type="text"
+                            name="section"
+                            placeholder="e.g. 002"
+                            style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box;"
+                            required
+                        >
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 0; white-space: nowrap;">Search</button>
+                </form>
+            </div>
+        </div>
 
-    <!-- Submit Button -->
-    <button type="button" class="submit-button">
-        Submit
-    </button>
+        <!-- Open Exams Section -->
+        <div class="dashboard-section">
+            <h2>Open Exams</h2>
+            <div class="exams-container">
+                {% if open_exams %}
+                <table class="exams-table">
+                    <thead>
+                        <tr>
+                            <th>Exam Name</th>
+                            <th>Course</th>
+                            <th>Section</th>
+                            <th>Quarter/Year</th>
+                            <th>Instructor</th>
+                            <th>Published</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for exam in open_exams %}
+                        <tr>
+                            <td><a href="/student/exam/{{ exam.exam_id }}">{{ exam.exam_name }}</a></td>
+                            <td>{{ exam.course_number }}</td>
+                            <td>{{ exam.section }}</td>
+                            <td>{{ exam.quarter_year }}</td>
+                            <td>{{ exam.instructor_name or 'N/A' }}</td>
+                            <td>{{ exam.date_published.strftime('%m/%d/%Y %I:%M %p') if exam.date_published else 'N/A' }}</td>
+                            <td>
+                                {% if exam.is_timed and exam.duration_hours is not none and exam.duration_minutes is not none %}
+                                    {{ exam.duration_hours }}h {{ exam.duration_minutes }}m
+                                {% else %}
+                                    No time limit
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="no-courses">No open exams available</p>
+                {% endif %}
+            </div>
+        </div>
 
-    <!-- Exam Preview -->
-    <p>You are registering for:</p>
-    <div class="exam-preview-box">Exam Name</div>
-
-    <!-- Logout -->
-    <a href="/" class="logout">Logout</a>
-
-    <!-- Register Button -->
-    <button type="button" class="register-button">
-        Register for Exam
-    </button>
-</div>
-
+        <!-- Previous Exams Section -->
+        <div class="dashboard-section">
+            <h2>Previous Exams</h2>
+            <div class="exams-container">
+                {% if previous_exams %}
+                <table class="exams-table">
+                    <thead>
+                        <tr>
+                            <th>Exam Name</th>
+                            <th>Course</th>
+                            <th>Section</th>
+                            <th>Quarter/Year</th>
+                            <th>Status</th>
+                            <th>Grade</th>
+                            <th>Completed</th>
+                            <th>Published</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for exam in previous_exams %}
+                        <tr>
+                            <td><a href="/student/exam/{{ exam.exam_id }}">{{ exam.exam_name }}</a></td>
+                            <td>{{ exam.course_number }}</td>
+                            <td>{{ exam.section }}</td>
+                            <td>{{ exam.quarter_year }}</td>
+                            <td>
+                                {% if exam.status == 'completed' %}
+                                    <span class="status-completed">Completed</span>
+                                {% elif exam.status == 'terminated' %}
+                                    <span class="status-terminated">Terminated</span>
+                                {% else %}
+                                    <span class="status-closed">Closed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if exam.final_grade is not none %}
+                                    {{ "%.1f"|format(exam.final_grade * 100) }}%
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>{{ exam.completed_at.strftime('%m/%d/%Y %I:%M %p') if exam.completed_at else 'N/A' }}</td>
+                            <td>{{ exam.date_published.strftime('%m/%d/%Y %I:%M %p') if exam.date_published else 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="no-courses">No previous exams</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </body>
 </html>

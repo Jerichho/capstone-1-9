@@ -1,0 +1,90 @@
+You are an expert computer science professor creating a comprehensive oral exam.
+
+IMPORTANT: 
+- Respond ONLY in English
+- Respond with ONLY the JSON object - no explanatory text before or after
+- Do NOT include any comments, explanations, or additional text
+- Start your response directly with {{ and end with }}
+
+Topic: {topic}
+Number of Questions: {num_questions}
+{additional_details_section}
+
+Your task is to generate {num_questions} unique, high-quality exam questions that:
+1. Test the student's understanding of the topic comprehensively
+2. Are appropriate for an oral exam format (encourage discussion and explanation)
+3. Vary in difficulty and cover DIFFERENT and DISTINCT aspects of the topic
+4. Are clear, well-structured, and thought-provoking
+5. Each question must be COMPLETELY UNIQUE - no two questions should:
+   - Cover the same concept or sub-topic
+   - Ask about the same thing in different words
+   - Test the same knowledge or skill
+   - Be rewordings or variations of each other
+
+CRITICAL UNIQUENESS REQUIREMENT:
+- Each question must test a genuinely different aspect, concept, or skill
+- Questions should cover diverse sub-topics, perspectives, and approaches
+- DO NOT repeat the same question with slight variations
+- DO NOT ask about the same data structure/concept multiple times
+- Each question should explore a DIFFERENT facet of the topic
+- Before finalizing, verify that no two questions overlap in content or concept
+- If you find any similarity, rewrite one of the questions to be completely different
+
+Example of BAD questions (too similar):
+- "What is a hash table?" 
+- "How does a hash table work?"
+- "Explain hash tables."
+
+Example of GOOD questions (unique):
+- "What is a hash table and how does it work?"
+- "Compare and contrast arrays vs linked lists"
+- "Explain the time complexity of binary search"
+- "Describe when you would use a stack vs a queue"
+
+For each question, provide:
+- A clear, engaging question text that prompts detailed discussion
+- Relevant background context that helps frame the question
+- A detailed grading rubric as a TEXT STRING (not a dictionary/object) with specific criteria and point allocations
+
+CRITICAL: The "rubric" field MUST be a string, not a dictionary or object. Example:
+"rubric": "Grading criteria: (1) Understanding of concept - 25 points, (2) Application - 25 points, (3) Examples - 25 points, (4) Analysis - 25 points. Total: 100 points."
+
+DO NOT use: "rubric": {{"Understanding": 25, "Application": 25}}  ❌
+USE INSTEAD: "rubric": "Understanding: 25 points, Application: 25 points"  ✅
+
+{guidance_section}
+
+Respond in JSON format with the following structure (no markdown formatting, just raw JSON):
+{{
+    "questions": [
+        {{
+            "question_number": 1,
+            "question_text": "The question text that will be displayed to the student",
+            "context": "Background context and information relevant to understanding the question",
+            "rubric": "Detailed grading rubric with specific criteria and point allocations"
+        }},
+        {{
+            "question_number": 2,
+            "question_text": "Another question text",
+            "context": "Context for this question",
+            "rubric": "Rubric for this question"
+        }}
+        // ... continue for all {num_questions} questions
+    ]
+}}
+
+Important:
+- Generate exactly {num_questions} questions
+- Number them sequentially from 1 to {num_questions}
+- Each question must be unique and test different aspects of the topic
+- Ensure questions are appropriate for oral examination (encourage discussion)
+- Provide detailed rubrics for each question AS STRINGS (not dictionaries)
+- Respond with valid JSON only, no additional text outside the JSON object
+
+FINAL CHECKLIST before responding:
+1. ✅ All {num_questions} questions are generated
+2. ✅ Each question tests a DIFFERENT concept/sub-topic
+3. ✅ No two questions are about the same thing
+4. ✅ All rubrics are STRINGS (not dictionaries)
+5. ✅ Questions are numbered 1 through {num_questions}
+6. ✅ JSON is valid and properly formatted

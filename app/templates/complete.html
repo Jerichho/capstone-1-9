@@ -12,7 +12,12 @@
             <h1>Exam Complete!</h1>
             
             <div class="final-grade-box">
-                <h2>Final Grade: {{ "%.1f"|format(exam.final_grade) }}%</h2>
+                {% if exam.final_grade is not none %}
+                <h2>Final Grade: {{ "%.1f"|format(exam.final_grade * 100) }}%</h2>
+                {% else %}
+                <h2>Exam Completed</h2>
+                <p>Your exam has been submitted. Grades will be available soon.</p>
+                {% endif %}
                 {% if exam.final_explanation %}
                 <div class="explanation-box">
                     <h3>Explanation</h3>
@@ -53,7 +58,8 @@
             </div>
             
             <div class="actions">
-                <a href="/" class="btn btn-secondary">Return to Login</a>
+                <a href="/student/dashboard" class="btn btn-primary">Back to Dashboard</a>
+                <a href="/" class="btn btn-secondary">Logout</a>
             </div>
         </div>
     </div>

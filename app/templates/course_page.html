@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ course_number }} - Section {{ section }} - Teacher Portal</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .course-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .course-header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .course-header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 1.8em;
+        }
+
+        .back-link {
+            color: #4CAF50;
+            text-decoration: none;
+            font-size: 0.95em;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .exams-section {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .exams-section h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.5em;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+
+        .exams-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .exams-list li {
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+            transition: background-color 0.2s;
+        }
+
+        .exams-list li:hover {
+            background-color: #e9ecef;
+        }
+
+        .exams-list li a {
+            color: #333;
+            text-decoration: none;
+            display: block;
+            font-weight: 500;
+        }
+
+        .exams-list li a:hover {
+            color: #4CAF50;
+        }
+
+        .exam-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .exam-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #4CAF50;
+        }
+
+        .exam-details {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .no-exams {
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .section-divider {
+            margin: 30px 0 20px 0;
+            border-top: 2px solid #ddd;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="course-container">
+        <div class="course-header">
+            <h1>{{ course_number }} - Section {{ section }}</h1>
+            <a href="/teacher/dashboard" class="back-link">← Back to Dashboard</a>
+        </div>
+
+        <div class="exams-section">
+            <h2>Exams</h2>
+            
+            <!-- Open Exams -->
+            <h3 style="margin-top: 0; margin-bottom: 15px; color: #4CAF50; font-size: 1.2em;">Open Exams</h3>
+            {% if open_exams %}
+            <ul class="exams-list">
+                {% for exam in open_exams %}
+                <li>
+                    <a href="/teacher/exam/{{ exam.exam_id }}">
+                        <div class="exam-name">{{ exam.exam_name }}</div>
+                        <div class="exam-info">
+                            <span class="exam-details">
+                                {% if exam.date_start %}Start: {{ exam.date_start.strftime('%m/%d/%Y %I:%M %p') }}{% endif %}
+                                {% if exam.date_end %} | End: {{ exam.date_end.strftime('%m/%d/%Y %I:%M %p') }}{% endif %}
+                            </span>
+                        </div>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="no-exams">No open exams at this time</p>
+            {% endif %}
+
+            <div class="section-divider"></div>
+
+            <!-- Closed Exams -->
+            <h3 style="margin-top: 0; margin-bottom: 15px; color: #666; font-size: 1.2em;">Closed Exams</h3>
+            {% if closed_exams %}
+            <ul class="exams-list">
+                {% for exam in closed_exams %}
+                <li>
+                    <a href="/teacher/exam/{{ exam.exam_id }}">
+                        <div class="exam-name">{{ exam.exam_name }}</div>
+                        <div class="exam-info">
+                            <span class="exam-details">
+                                {% if exam.date_start %}Start: {{ exam.date_start.strftime('%m/%d/%Y %I:%M %p') }}{% endif %}
+                                {% if exam.date_end %} | End: {{ exam.date_end.strftime('%m/%d/%Y %I:%M %p') }}{% endif %}
+                                {% if exam.date_completed %} | Completed: {{ exam.date_completed.strftime('%m/%d/%Y %I:%M %p') }}{% endif %}
+                            </span>
+                        </div>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="no-exams">No closed exams</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

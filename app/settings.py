@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     
     # Together.ai API Configuration
     together_api_key: str = ""
-    llm_model: str = "arize-ai/qwen-2-1.5b-instruct"
+    llm_model: str = "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"  # Serverless model (no dedicated endpoint needed)
     llm_temperature: float = 0.7
     llm_max_tokens: int = 2000
     

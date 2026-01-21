@@ -24,9 +24,27 @@ def render_template(template_name: str, context: dict) -> HTMLResponse:
 @router.get("/exam/{exam_id}", response_class=HTMLResponse)
 async def get_exam(request: Request, exam_id: int, db: Session = Depends(get_db)):
     """Get current question for exam."""
-    from app.db.models import Exam, ExamTemplate
+    from app.db.repo import ExamRepository, QuestionRepository
     
     exam_service = ExamService()
+    
+    # Get exam to check if it exists
+    exam = ExamRepository.get(db, exam_id)
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+    
+    # Check if exam has any questions
+    questions = QuestionRepository.get_by_exam(db, exam_id)
+    
+    if len(questions) == 0:
+        # No questions yet - exam might not be ready
+        # For now, show a message that exam is being prepared
+        return render_template("exam_preparing.html", {
+            "request": request,
+            "exam": exam,
+            "exam_id": exam_id
+        })
+    
     question = await exam_service.get_current_question(db, exam_id)
     
     if question is None:
@@ -36,26 +54,17 @@ async def get_exam(request: Request, exam_id: int, db: Session = Depends(get_db)
     # Get exam status
     status = exam_service.get_exam_status(db, exam_id)
     
-    # Get exam template to check time limits
-    exam = ExamRepository.get(db, exam_id)
-    time_limit_type = None
-    time_limit_minutes = None
-    if exam and exam.exam_template_id:
-        exam_template = db.query(ExamTemplate).filter(ExamTemplate.id == exam.exam_template_id).first()
-        if exam_template:
-            time_limit_type = exam_template.time_limit_type
-            time_limit_minutes = exam_template.time_limit_minutes
-    
-    # Parse rubric if it's JSON format
-    rubric_parsed = None
-    if question.rubric:
-        import json
-        try:
-            rubric_data = json.loads(question.rubric)
-            if isinstance(rubric_data, dict) and "type" in rubric_data and "criteria" in rubric_data:
-                rubric_parsed = rubric_data
-        except:
-            pass
+    # Pass exam timing information for timer display
+    exam_end_time = None
+    if exam.is_timed and exam.date_end:
+        exam_end_time = exam.date_end.isoformat()
+        # Log for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Exam timing - exam_id={exam.id}, is_timed={exam.is_timed}, duration_hours={exam.duration_hours}, duration_minutes={exam.duration_minutes}, date_end={exam.date_end}, student_exam_start_time={exam.student_exam_start_time}")
+        if exam.student_exam_start_time and exam.date_end:
+            time_diff = (exam.date_end - exam.student_exam_start_time).total_seconds() / 3600
+            logger.info(f"Time difference: {time_diff:.2f} hours ({exam.duration_hours or 0}h {exam.duration_minutes or 0}m expected)")
     
     return render_template("question.html", {
         "request": request,
@@ -63,9 +72,8 @@ async def get_exam(request: Request, exam_id: int, db: Session = Depends(get_db)
         "exam_id": exam_id,
         "question_number": status["questions_completed"] + 1,
         "total_questions": status["total_questions"],
-        "rubric_parsed": rubric_parsed,
-        "time_limit_type": time_limit_type,
-        "time_limit_minutes": time_limit_minutes
+        "is_timed": exam.is_timed,
+        "exam_end_time": exam_end_time
     })
 
 
