@@ -558,6 +558,31 @@ async def student_start_exam(
         if student_exam.status == "completed":
             return RedirectResponse(url=f"/student/exam/{exam_id}?error=You have already completed this exam", status_code=302)
         
+        # Ensure date_end is set correctly for timed exams (fix for existing exams that might have wrong date_end)
+        if exam.is_timed and exam.duration_hours is not None and exam.duration_minutes is not None:
+            # If date_end is missing or seems incorrect, recalculate it
+            if not student_exam.date_end or not student_exam.student_exam_start_time:
+                # Recalculate based on when student actually started (or now if never started)
+                start_time = student_exam.student_exam_start_time or now
+                duration = timedelta(hours=exam.duration_hours, minutes=exam.duration_minutes)
+                student_exam.date_end = start_time + duration
+                student_exam.student_exam_start_time = start_time
+                logger.info(f"Recalculated exam end time for existing exam: start={start_time}, duration={duration} (hours={exam.duration_hours}, minutes={exam.duration_minutes}), end={student_exam.date_end}")
+                db.commit()
+            else:
+                # Verify date_end is reasonable (not more than 24 hours from start)
+                start_time = student_exam.student_exam_start_time
+                expected_duration = timedelta(hours=exam.duration_hours, minutes=exam.duration_minutes)
+                expected_end = start_time + expected_duration
+                # If date_end is way off (more than 1 hour difference), recalculate
+                time_diff = abs((student_exam.date_end - expected_end).total_seconds())
+                if time_diff > 3600:
+                    duration = timedelta(hours=exam.duration_hours, minutes=exam.duration_minutes)
+                    old_end = student_exam.date_end
+                    student_exam.date_end = start_time + duration
+                    logger.warning(f"Fixed incorrect exam end time: old_end={old_end}, new_end={student_exam.date_end}, duration={duration} (hours={exam.duration_hours}, minutes={exam.duration_minutes}), time_diff={time_diff/3600:.2f} hours")
+                    db.commit()
+        
         # Check if student exam has questions, if not generate them (safety check for incomplete generation)
         student_questions = QuestionRepository.get_by_exam(db, student_exam.id)
         if not student_questions:
@@ -635,6 +660,7 @@ async def student_start_exam(
         if exam.is_timed and exam.duration_hours is not None and exam.duration_minutes is not None:
             duration = timedelta(hours=exam.duration_hours, minutes=exam.duration_minutes)
             new_student_exam.date_end = now + duration
+            logger.info(f"Setting exam end time: start={now}, duration={duration} (hours={exam.duration_hours}, minutes={exam.duration_minutes}), end={new_student_exam.date_end}")
         
         try:
             db.add(new_student_exam)
