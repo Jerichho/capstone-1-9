@@ -173,6 +173,46 @@ async def submit_dispute(
             related_exam_id=exam.id,
             related_course_id=None  # Could link to course if we have that relationship
         )
+        
+        # Send email notification to instructor
+        from app.services.email_service import EmailService
+        from app.db.models import Student, User as UserModel
+        from app.db.repo import QuestionRepository
+        
+        # Get instructor email
+        instructor = db.query(UserModel).filter(UserModel.id == exam.instructor_id).first()
+        if instructor and instructor.email:
+            # Get student name
+            student_name = "Student"
+            if exam.student_id:
+                student = db.query(Student).filter(Student.id == exam.student_id).first()
+                if student:
+                    student_user = db.query(UserModel).filter(UserModel.email == student.username).first()
+                    if student_user:
+                        student_name = f"{student_user.first_name} {student_user.last_name}".strip() or student.username
+                    else:
+                        student_name = student.username
+            
+            # Get questions for this exam
+            questions = QuestionRepository.get_by_exam(db, exam.id)
+            
+            # Generate exam details HTML
+            email_service = EmailService()
+            exam_details_html = email_service.generate_exam_details_html(
+                exam=exam,
+                student_name=student_name,
+                questions=questions,
+                dispute_reason=dispute_reason
+            )
+            
+            # Send email
+            email_service.send_dispute_notification(
+                to_email=instructor.email,
+                student_name=student_name,
+                course_number=exam.course_number,
+                exam_name=exam.exam_name,
+                exam_details_html=exam_details_html
+            )
     
     return RedirectResponse(url=f"/api/exam/{exam_id}/complete?success=Dispute submitted successfully", status_code=302)
 

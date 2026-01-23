@@ -24,6 +24,14 @@ class Settings(BaseSettings):
     exam_question_count: int = 3
     exam_time_limit_minutes: int = 60
     
+    # Email Configuration
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    smtp_use_tls: bool = True
+    
     class Config:
         # Use absolute path to .env file relative to this file's location
         # __file__ is app/settings.py, so parent.parent is project root
