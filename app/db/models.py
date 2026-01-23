@@ -21,7 +21,7 @@ class User(Base):
     
     # Relationships
     courses = relationship("Course", back_populates="instructor")
-    notifications = relationship("Notification", foreign_keys="Notification.user_id")
+    notifications = relationship("Notification", back_populates="user")
     
 class Student(Base):
     """Student model."""
@@ -147,7 +147,7 @@ class Notification(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
-    user = relationship("User")
+    user = relationship("User", back_populates="notifications")
     related_exam = relationship("Exam")
     related_course = relationship("Course")
 
