@@ -277,3 +277,355 @@ textarea {
     }
 }
 
+/* ============================================
+   BlueVox Login Page Styles
+   ============================================ */
+
+/* BlueVox Login Page Background */
+body.bluevox-login {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2d3561 100%) !important;
+    min-height: 100vh;
+    padding: 0 !important;
+    margin: 0;
+    color: white;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Override global styles for BlueVox login page */
+body.bluevox-login * {
+    box-sizing: border-box;
+}
+
+body.bluevox-login .container {
+    max-width: none;
+    margin: 0;
+}
+
+/* Animated Starfield */
+.starfield {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: float linear infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.3;
+    }
+    25% {
+        transform: translate(30px, -40px) scale(1.3);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-25px, -70px) scale(0.8);
+        opacity: 0.6;
+    }
+    75% {
+        transform: translate(40px, -30px) scale(1.2);
+        opacity: 0.9;
+    }
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.3;
+    }
+}
+
+/* Login Header */
+.login-header {
+    position: relative;
+    z-index: 10;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.header-contact {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.phone-number {
+    color: white;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.get-in-touch-btn {
+    padding: 10px 24px;
+    background: transparent;
+    border: 1px solid;
+    border-image: linear-gradient(135deg, #a78bfa, #60a5fa, #ffffff) 1;
+    border-radius: 20px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.get-in-touch-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.get-in-touch-btn:hover::before {
+    left: 100%;
+}
+
+.get-in-touch-btn:hover {
+    box-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
+    transform: translateY(-2px);
+}
+
+/* Login Container */
+body.bluevox-login .login-container {
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+/* Logo Section */
+.logo-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.main-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+body.bluevox-login .depaul-logo {
+    font-family: 'Georgia', 'Times New Roman', serif !important;
+    font-size: 42px !important;
+    font-weight: 400 !important;
+    color: white !important;
+    letter-spacing: 2px !important;
+    margin: 0 !important;
+}
+
+body.bluevox-login .bluevox-logo {
+    font-family: 'Brush Script MT', 'Lucida Handwriting', cursive !important;
+    font-size: 48px !important;
+    color: #60a5fa !important;
+    text-shadow: 0 0 20px rgba(96, 165, 250, 0.6) !important;
+    font-weight: 300 !important;
+    letter-spacing: 1px !important;
+    margin: 0 !important;
+}
+
+body.bluevox-login .main-logo h1,
+body.bluevox-login h1.main-logo {
+    color: inherit !important;
+    margin-bottom: 0 !important;
+    font-size: inherit !important;
+}
+
+.emblem {
+    margin-top: 10px;
+    opacity: 0.9;
+}
+
+/* Login Card */
+body.bluevox-login .login-card-bluevox {
+    background: rgba(15, 20, 40, 0.3) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 16px !important;
+    padding: 40px !important;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    margin: 0 !important;
+}
+
+.login-instruction {
+    color: white;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 16px;
+    font-weight: 300;
+}
+
+/* Form Styles */
+body.bluevox-login .login-form-bluevox {
+    width: 100%;
+}
+
+body.bluevox-login .form-group-bluevox {
+    margin-bottom: 24px;
+}
+
+body.bluevox-login .form-group-bluevox label {
+    display: block !important;
+    color: white !important;
+    margin-bottom: 8px !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+}
+
+body.bluevox-login .input-bluevox,
+body.bluevox-login input[type="email"].input-bluevox,
+body.bluevox-login input[type="password"].input-bluevox {
+    width: 100% !important;
+    padding: 14px 16px !important;
+    background: rgba(20, 30, 60, 0.6) !important;
+    border: 1px solid rgba(96, 165, 250, 0.3) !important;
+    border-radius: 8px !important;
+    color: white !important;
+    font-size: 16px !important;
+    font-family: inherit !important;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(96, 165, 250, 0.1) !important;
+    margin: 0 !important;
+}
+
+body.bluevox-login .input-bluevox::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+body.bluevox-login .input-bluevox:focus {
+    outline: none !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 15px rgba(96, 165, 250, 0.4) !important;
+    background: rgba(20, 30, 60, 0.8) !important;
+}
+
+/* Login Button */
+body.bluevox-login .btn-login-bluevox,
+body.bluevox-login button.btn-login-bluevox {
+    width: 100% !important;
+    padding: 16px !important;
+    background: linear-gradient(180deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    color: white !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4) !important;
+    margin-top: 10px !important;
+}
+
+body.bluevox-login .btn-login-bluevox:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6) !important;
+    background: linear-gradient(180deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%) !important;
+}
+
+body.bluevox-login .btn-login-bluevox:active {
+    transform: translateY(0);
+}
+
+/* Footer Links */
+body.bluevox-login .login-footer-links {
+    text-align: center;
+    margin-top: 30px;
+}
+
+body.bluevox-login .instructor-link {
+    display: block !important;
+    color: #60a5fa !important;
+    text-decoration: none !important;
+    font-size: 14px !important;
+    margin-bottom: 12px !important;
+    transition: color 0.3s ease;
+}
+
+body.bluevox-login .instructor-link:hover {
+    color: #93c5fd !important;
+    text-decoration: underline !important;
+}
+
+body.bluevox-login .signup-prompt {
+    color: white !important;
+    font-size: 14px !important;
+    margin-top: 8px !important;
+}
+
+body.bluevox-login .signup-link {
+    color: #60a5fa !important;
+    text-decoration: underline !important;
+    transition: color 0.3s ease;
+}
+
+body.bluevox-login .signup-link:hover {
+    color: #93c5fd !important;
+}
+
+/* Error and Success Messages */
+.error-message-bluevox {
+    background: rgba(220, 38, 38, 0.2);
+    border: 1px solid rgba(220, 38, 38, 0.5);
+    color: #fca5a5;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.success-message-bluevox {
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid rgba(34, 197, 94, 0.5);
+    color: #86efac;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Responsive Design for BlueVox Login */
+@media (max-width: 768px) {
+    body.bluevox-login .depaul-logo {
+        font-size: 32px !important;
+    }
+    
+    body.bluevox-login .bluevox-logo {
+        font-size: 36px !important;
+    }
+    
+    body.bluevox-login .login-card-bluevox {
+        padding: 30px 20px !important;
+        max-width: 100%;
+    }
+    
+    body.bluevox-login .login-instruction {
+        font-size: 14px !important;
+    }
+}
+

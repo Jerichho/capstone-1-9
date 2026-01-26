@@ -32,7 +32,7 @@ Base.metadata.create_all(bind=engine)
 
 # Create FastAPI app
 app = FastAPI(
-    title="AI Oral Exam Grader",
+    title="BlueVox",
     description="AI-powered oral exam grading system",
     version="0.1.0"
 )
