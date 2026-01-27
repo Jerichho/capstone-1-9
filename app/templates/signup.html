@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DePaul BlueVox — Create Account</title>
+    <link rel="icon" type="image/png" href="/static/assets/depaul-shield.png">
     
     <!-- UI font -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -219,16 +220,20 @@
 
       body.bluevox-signup .btnRow {
         margin-top: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
 
       body.bluevox-signup .btn {
-        width: 187px;
+        width: 220px;
+        min-width: 220px;
         height: 48px;
         border-radius: 8px;
         border: 1px solid var(--btn-border);
         background: linear-gradient(180deg, var(--btn-top), var(--btn-bot));
         color: rgba(255, 255, 255, 0.92);
-        font-size: 22px;
+        font-size: 20px;
         font-weight: 500;
         cursor: pointer;
         box-shadow:
@@ -236,6 +241,14 @@
           0 0 0 1px rgba(0, 0, 0, 0.18) inset,
           0 0 18px rgba(70, 160, 255, 0.16);
         transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        white-space: nowrap;
+        padding: 0 16px;
+        line-height: 1;
+        box-sizing: border-box;
       }
 
       body.bluevox-signup .btn:hover {
@@ -333,6 +346,7 @@
         }
         body.bluevox-signup .btn {
           width: 100%;
+          min-width: 100%;
         }
       }
     </style>
