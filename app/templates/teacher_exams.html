@@ -115,6 +115,9 @@
         padding: 40px 20px;
         position: relative;
         z-index: 1;
+        box-sizing: border-box;
+        width: 100%;
+        overflow-x: hidden; /* Prevent container overflow */
       }
 
       .page-header {
@@ -166,12 +169,27 @@
         padding: 28px;
         margin-bottom: 24px;
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        box-sizing: border-box;
+        max-width: 100%;
+        overflow: hidden; /* Prevent panel content from overflowing */
+      }
+
+      .table-container {
+        overflow-x: auto;
+        overflow-y: visible;
+        border-radius: 8px;
+        max-width: 100%;
+        width: 100%;
+        box-sizing: border-box;
+        -webkit-overflow-scrolling: touch;
       }
 
       .exams-table {
         width: 100%;
+        min-width: 700px; /* Minimum width to prevent cramping, allows scroll */
         border-collapse: collapse;
         font-size: 14px;
+        table-layout: auto;
       }
 
       .exams-table thead {
@@ -266,6 +284,7 @@
 
         <div class="panel">
             {% if exams %}
+            <div class="table-container">
             <table class="exams-table">
                 <thead>
                     <tr>
@@ -301,6 +320,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
             {% else %}
             <div class="empty-state">No exams found</div>
             {% endif %}

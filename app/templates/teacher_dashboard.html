@@ -263,6 +263,9 @@
         flex: 1;
         margin-left: 260px;
         padding: 32px 40px;
+        min-width: 0; /* Allow flex item to shrink below content size */
+        overflow-x: hidden; /* Prevent horizontal overflow */
+        box-sizing: border-box;
       }
 
       .dashboard-header {
@@ -347,6 +350,9 @@
         border-radius: 10px;
         padding: 24px;
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+        box-sizing: border-box;
+        max-width: 100%;
+        overflow: hidden; /* Prevent panel content from overflowing */
       }
 
       .panel-full {
@@ -476,13 +482,20 @@
       /* ===== Tables ===== */
       .table-container {
         overflow-x: auto;
+        overflow-y: visible;
         border-radius: 8px;
+        max-width: 100%;
+        width: 100%;
+        box-sizing: border-box;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
       }
 
       .exams-table {
         width: 100%;
+        min-width: 600px; /* Minimum width to prevent cramping, but allows scroll */
         border-collapse: collapse;
         font-size: 13px;
+        table-layout: auto; /* Allow columns to size naturally */
       }
 
       .exams-table thead {
@@ -607,6 +620,9 @@
         .main-content {
           margin-left: 240px;
           padding: 20px;
+        }
+        .exams-table {
+          min-width: 500px; /* Smaller min-width on mobile */
         }
       }
     </style>

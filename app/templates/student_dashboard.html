@@ -107,14 +107,20 @@
         .exams-container {
             max-height: 400px;
             overflow-y: auto;
+            overflow-x: auto;
             border: 1px solid rgba(120, 175, 255, 0.2);
             border-radius: 8px;
+            max-width: 100%;
+            box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
         }
 
         .exams-table {
             width: 100%;
+            min-width: 600px; /* Minimum width to prevent cramping, allows scroll */
             border-collapse: collapse;
             font-size: 0.9em;
+            table-layout: auto;
         }
 
         .exams-table th {
