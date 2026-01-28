@@ -788,15 +788,21 @@ async def teacher_dashboard(request: Request, db: Session = Depends(get_db)):
         
         open_exams.append({
             "exam_id": exam.exam_id,
+            "exam_name": exam.exam_name,
+            "course_number": exam.course_number,
+            "section": exam.section,
+            "quarter_year": exam.quarter_year,
             "student_id": user_obj.student_id if user_obj else (student.username if student else None),
             "first_name": user_obj.first_name if user_obj else None,
             "last_name": user_obj.last_name if user_obj else None,
             "status": exam.status,
             "percent": percent,
             "grade": grade,
+            "final_grade": exam.final_grade,
             "date_started": exam.created_at if exam.student_id else None,
             "date_completed": exam.completed_at,
-            "date_published": exam.date_published
+            "date_published": exam.date_published,
+            "student": student.username if student else None
         })
     
     # Query closed exams for this instructor (terminated or completed)
@@ -844,16 +850,22 @@ async def teacher_dashboard(request: Request, db: Session = Depends(get_db)):
         
         closed_exams.append({
             "exam_id": exam.exam_id,
+            "exam_name": exam.exam_name,
+            "course_number": exam.course_number,
+            "section": exam.section,
+            "quarter_year": exam.quarter_year,
             "student_id": user_obj.student_id if user_obj else (student.username if student else None),
             "first_name": user_obj.first_name if user_obj else None,
             "last_name": user_obj.last_name if user_obj else None,
             "status": exam.status,
             "percent": percent,
             "grade": grade,
+            "final_grade": exam.final_grade,
             "date_started": exam.created_at if exam.student_id else None,
             "date_completed": exam.completed_at,
             "date_published": exam.date_published,
-            "date_end_availability": exam.date_end_availability
+            "date_end_availability": exam.date_end_availability,
+            "student": student.username if student else None
         })
     
     # Get notifications for the user

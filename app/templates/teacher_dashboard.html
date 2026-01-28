@@ -125,6 +125,8 @@
         width: 100%;
         max-width: 100vw;
         overflow-x: hidden; /* Prevent layout overflow */
+        /* Ensure layout doesn't exceed viewport */
+        box-sizing: border-box;
       }
 
       /* ===== Sidebar ===== */
@@ -265,13 +267,25 @@
 
       /* ===== Main Content ===== */
       .main-content {
-        flex: 1;
+        flex: 1 1 0; /* Don't grow beyond available space */
         margin-left: 260px;
         padding: 32px 40px;
         min-width: 0; /* Allow flex item to shrink below content size */
-        overflow-x: hidden; /* Prevent horizontal overflow */
+        max-width: calc(100vw - 260px); /* Explicitly constrain to viewport minus sidebar */
+        width: calc(100vw - 260px); /* Explicit width to prevent overflow */
+        overflow-x: hidden !important; /* Prevent horizontal overflow at main-content level */
+        overflow-y: auto; /* Allow vertical scrolling */
         box-sizing: border-box;
-        max-width: calc(100vw - 260px); /* Ensure it doesn't exceed viewport minus sidebar */
+        position: relative;
+        /* Ensure content stays to the right of sidebar */
+        flex-shrink: 1;
+      }
+      
+      /* Ensure all children of main-content are properly constrained */
+      .main-content > * {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
       }
 
       .dashboard-header {
@@ -354,17 +368,23 @@
         backdrop-filter: blur(12px);
         border: 1px solid rgba(120, 175, 255, 0.15);
         border-radius: 10px;
-        padding: 24px;
+        padding: 28px;
+        margin-bottom: 24px;
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
         box-sizing: border-box;
-        max-width: 100%;
         width: 100%;
-        overflow: visible; /* Allow table-container to scroll */
+        max-width: 100%;
+        overflow: hidden; /* Prevent panel content from overflowing - matches teacher_exams.html */
+        /* Ensure panel respects parent container */
+        min-width: 0;
         position: relative; /* Establish positioning context */
       }
 
       .panel-full {
         grid-column: 1 / -1;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
       }
 
       .panel-header {
@@ -374,6 +394,16 @@
         margin-bottom: 20px;
         padding-bottom: 14px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow: hidden; /* Prevent header content from overflowing */
+        min-width: 0; /* Allow flex children to shrink */
+      }
+
+      .panel-header > * {
+        min-width: 0; /* Allow flex children to shrink */
+        flex-shrink: 1; /* Allow buttons to shrink if needed */
       }
 
       .panel-title {
@@ -489,18 +519,20 @@
 
       /* ===== Tables ===== */
       .table-container {
-        overflow-x: auto;
+        overflow-x: auto !important;
         overflow-y: visible;
         border-radius: 8px;
-        max-width: 100%;
-        width: 100%;
-        box-sizing: border-box;
-        -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
-        display: block; /* Ensure it's a block element for proper scrolling */
-        position: relative; /* Establish positioning context */
+        max-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        -webkit-overflow-scrolling: touch;
         /* Ensure scrollbar is visible */
         scrollbar-width: thin;
         scrollbar-color: rgba(120, 175, 255, 0.5) transparent;
+        /* Force scrolling when content exceeds container */
+        min-width: 0 !important;
+        /* Ensure container doesn't exceed parent */
+        position: relative;
       }
 
       .table-container::-webkit-scrollbar {
@@ -523,18 +555,13 @@
 
       .exams-table {
         width: 100%;
-        min-width: 600px; /* Minimum width to prevent cramping, but allows scroll */
+        min-width: 700px; /* Minimum width to prevent cramping, allows scroll - matches teacher_exams.html */
         border-collapse: collapse;
-        font-size: 13px;
-        table-layout: auto; /* Allow columns to size naturally */
+        font-size: 14px;
+        table-layout: auto;
         margin: 0; /* Remove any default margins */
-      }
-
-      /* Ensure table cells can wrap long content if needed */
-      .exams-table th,
-      .exams-table td {
-        word-wrap: break-word;
-        overflow-wrap: break-word;
+        /* Ensure table doesn't force container wider */
+        max-width: none; /* Allow table to be wider than container, triggering scroll */
       }
 
       .exams-table thead {
@@ -566,12 +593,12 @@
         background: rgba(255, 255, 255, 0.05);
       }
 
-      .exams-table a {
+      .exams-table tbody tr a {
         color: rgba(170, 220, 255, 0.9);
         text-decoration: none;
       }
 
-      .exams-table a:hover {
+      .exams-table tbody tr a:hover {
         color: rgba(220, 245, 255, 0.95);
         text-decoration: underline;
       }
@@ -823,145 +850,6 @@
                 </div>
             </div>
         </div>
-
-            <!-- Open Exams Table -->
-            <div class="panel panel-full" style="margin-top: 20px; overflow: visible;">
-                <div class="panel-header">
-                    <h2 class="panel-title">Open Exams</h2>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">Export</button>
-                    </div>
-                </div>
-                <div class="table-container" style="width: 100%; max-width: 100%;">
-                    {% if open_exams %}
-                    <table class="exams-table">
-                        <thead>
-                            <tr>
-                                <th>Exam ID</th>
-                                <th>Student</th>
-                                <th>Section</th>
-                                <th>Status</th>
-                                <th>Started</th>
-                                <th>Completed</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for exam in open_exams %}
-                            <tr>
-                                <td>
-                                    <a href="/teacher/exam/{{ exam.exam_id }}">
-                                        {{ exam.exam_id[:30] }}{% if exam.exam_id|length > 30 %}...{% endif %}
-                                    </a>
-                                </td>
-                                <td>
-                                    {% if exam.first_name or exam.last_name %}
-                                        {{ exam.first_name or '' }} {{ exam.last_name or '' }}
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </td>
-                                <td>{{ exam.exam_id.split('-')[1] if exam.exam_id and '-' in exam.exam_id else '—' }}</td>
-                                <td>
-                                    {% if exam.status == 'active' %}
-                                        <span class="status-badge status-active">
-                                            <span class="status-dot"></span>
-                                            Active
-                                        </span>
-                                    {% elif exam.status == 'completed' %}
-                                        <span class="status-badge status-completed">
-                                            <span class="status-dot"></span>
-                                            Submitted
-                                        </span>
-                                    {% elif exam.status == 'in_progress' %}
-                                        <span class="status-badge status-in-progress">
-                                            <span class="status-dot"></span>
-                                            In Progress
-                                        </span>
-                                    {% else %}
-                                        <span class="status-badge status-not-started">
-                                            <span class="status-dot"></span>
-                                            Not Started
-                                        </span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ exam.date_started.strftime('%Y-%m-%d %H:%M') if exam.date_started else '—' }}</td>
-                                <td>{{ exam.date_completed.strftime('%Y-%m-%d %H:%M') if exam.date_completed else '—' }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <div class="empty-state">No open exams at this time</div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-            <!-- Closed Exams Table -->
-            <div class="panel panel-full" style="margin-top: 20px; overflow: visible;">
-                <div class="panel-header">
-                    <h2 class="panel-title">Closed Exams</h2>
-                </div>
-                <div class="table-container" style="width: 100%; max-width: 100%;">
-                    {% if closed_exams %}
-                    <table class="exams-table">
-                        <thead>
-                            <tr>
-                                <th>Exam ID</th>
-                                <th>Student</th>
-                                <th>Section</th>
-                                <th>Status</th>
-                                <th>Started</th>
-                                <th>Completed</th>
-                                <th>Terminated</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for exam in closed_exams %}
-                            <tr>
-                                <td>
-                                    <a href="/teacher/exam/{{ exam.exam_id }}">
-                                        {{ exam.exam_id[:30] }}{% if exam.exam_id|length > 30 %}...{% endif %}
-                                    </a>
-                                </td>
-                                <td>
-                                    {% if exam.first_name or exam.last_name %}
-                                        {{ exam.first_name or '' }} {{ exam.last_name or '' }}
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </td>
-                                <td>{{ exam.exam_id.split('-')[1] if exam.exam_id and '-' in exam.exam_id else '—' }}</td>
-                                <td>
-                                    {% if exam.status == 'terminated' %}
-                                        <span class="status-badge status-terminated">
-                                            <span class="status-dot"></span>
-                                            Terminated
-                                        </span>
-                                    {% elif exam.status == 'completed' %}
-                                        <span class="status-badge status-completed">
-                                            <span class="status-dot"></span>
-                                            Completed
-                                        </span>
-                                    {% else %}
-                                        <span class="status-badge status-not-started">
-                                            <span class="status-dot"></span>
-                                            {{ exam.status }}
-                                        </span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ exam.date_started.strftime('%Y-%m-%d %H:%M') if exam.date_started else '—' }}</td>
-                                <td>{{ exam.date_completed.strftime('%Y-%m-%d %H:%M') if exam.date_completed else '—' }}</td>
-                                <td>{{ exam.date_end_availability.strftime('%Y-%m-%d %H:%M') if exam.date_end_availability else '—' }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <div class="empty-state">No closed exams at this time</div>
-                    {% endif %}
-                </div>
-            </div>
         </main>
     </div>
 
