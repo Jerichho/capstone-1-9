@@ -134,7 +134,8 @@
 
       .filter-tabs {
         display: flex;
-        gap: 12px;
+        gap: 0;
+        align-items: center;
         margin-bottom: 24px;
       }
 
@@ -148,6 +149,12 @@
         font-size: 14px;
         font-weight: 500;
         transition: all 0.2s ease;
+      }
+
+      .filter-separator {
+        margin: 0 12px;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: normal;
       }
 
       .filter-tab:hover {
@@ -274,10 +281,20 @@
 <body class="bluevox-exams">
     <div class="exams-container">
         <div class="page-header">
-            <h1 class="page-title">Exams</h1>
+            <h1 class="page-title">
+                {% if filter_type == 'open' %}
+                    Open Exams
+                {% elif filter_type == 'closed' %}
+                    Closed Exams
+                {% else %}
+                    All Exams
+                {% endif %}
+            </h1>
             <div class="filter-tabs">
                 <a href="/teacher/exams?filter=all" class="filter-tab {% if filter_type == 'all' %}active{% endif %}">All Exams</a>
+                <span class="filter-separator">|</span>
                 <a href="/teacher/exams?filter=open" class="filter-tab {% if filter_type == 'open' %}active{% endif %}">Open Exams</a>
+                <span class="filter-separator">|</span>
                 <a href="/teacher/exams?filter=closed" class="filter-tab {% if filter_type == 'closed' %}active{% endif %}">Closed Exams</a>
             </div>
         </div>
