@@ -86,6 +86,8 @@
         color: var(--page-text);
         overflow-x: hidden;
         min-height: 100vh;
+        width: 100%;
+        max-width: 100vw;
         background:
           radial-gradient(1100px 760px at 88% 55%, rgba(40, 165, 255, 0.34), rgba(0, 0, 0, 0) 62%),
           radial-gradient(900px 650px at 92% 60%, rgba(20, 120, 255, 0.20), rgba(0, 0, 0, 0) 62%),
@@ -120,6 +122,9 @@
         min-height: 100vh;
         position: relative;
         z-index: 1;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden; /* Prevent layout overflow */
       }
 
       /* ===== Sidebar ===== */
@@ -266,6 +271,7 @@
         min-width: 0; /* Allow flex item to shrink below content size */
         overflow-x: hidden; /* Prevent horizontal overflow */
         box-sizing: border-box;
+        max-width: calc(100vw - 260px); /* Ensure it doesn't exceed viewport minus sidebar */
       }
 
       .dashboard-header {
@@ -352,7 +358,9 @@
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
         box-sizing: border-box;
         max-width: 100%;
-        overflow: hidden; /* Prevent panel content from overflowing */
+        width: 100%;
+        overflow: visible; /* Allow table-container to scroll */
+        position: relative; /* Establish positioning context */
       }
 
       .panel-full {
@@ -488,6 +496,29 @@
         width: 100%;
         box-sizing: border-box;
         -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
+        display: block; /* Ensure it's a block element for proper scrolling */
+        position: relative; /* Establish positioning context */
+        /* Ensure scrollbar is visible */
+        scrollbar-width: thin;
+        scrollbar-color: rgba(120, 175, 255, 0.5) transparent;
+      }
+
+      .table-container::-webkit-scrollbar {
+        height: 8px;
+      }
+
+      .table-container::-webkit-scrollbar-track {
+        background: rgba(2, 10, 28, 0.3);
+        border-radius: 4px;
+      }
+
+      .table-container::-webkit-scrollbar-thumb {
+        background: rgba(120, 175, 255, 0.5);
+        border-radius: 4px;
+      }
+
+      .table-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(120, 175, 255, 0.7);
       }
 
       .exams-table {
@@ -496,6 +527,14 @@
         border-collapse: collapse;
         font-size: 13px;
         table-layout: auto; /* Allow columns to size naturally */
+        margin: 0; /* Remove any default margins */
+      }
+
+      /* Ensure table cells can wrap long content if needed */
+      .exams-table th,
+      .exams-table td {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
       }
 
       .exams-table thead {
@@ -620,6 +659,8 @@
         .main-content {
           margin-left: 240px;
           padding: 20px;
+          width: calc(100% - 240px);
+          max-width: calc(100vw - 240px);
         }
         .exams-table {
           min-width: 500px; /* Smaller min-width on mobile */
@@ -784,14 +825,14 @@
         </div>
 
             <!-- Open Exams Table -->
-            <div class="panel panel-full" style="margin-top: 20px;">
+            <div class="panel panel-full" style="margin-top: 20px; overflow: visible;">
                 <div class="panel-header">
                     <h2 class="panel-title">Open Exams</h2>
                     <div style="display: flex; gap: 10px;">
                         <button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;">Export</button>
                     </div>
                 </div>
-                <div class="table-container">
+                <div class="table-container" style="width: 100%; max-width: 100%;">
                     {% if open_exams %}
                     <table class="exams-table">
                         <thead>
@@ -857,11 +898,11 @@
         </div>
 
             <!-- Closed Exams Table -->
-            <div class="panel panel-full" style="margin-top: 20px;">
+            <div class="panel panel-full" style="margin-top: 20px; overflow: visible;">
                 <div class="panel-header">
                     <h2 class="panel-title">Closed Exams</h2>
                 </div>
-                <div class="table-container">
+                <div class="table-container" style="width: 100%; max-width: 100%;">
                     {% if closed_exams %}
                     <table class="exams-table">
                         <thead>
