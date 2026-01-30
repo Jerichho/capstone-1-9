@@ -1574,6 +1574,12 @@
                     return; // Let these navigate normally
                 }
                 
+                // Use full page navigation for pages with complex client-side scripts.
+                // These forms rely on inline scripts that don't run when loaded via SPA fetch.
+                if (href.includes('register-course') || href.includes('create-exam')) {
+                    return; // Full page load - scripts need to execute
+                }
+                
                 // Only handle teacher dashboard routes
                 if (href.startsWith('/teacher/')) {
                     e.preventDefault();
