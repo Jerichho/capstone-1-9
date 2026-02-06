@@ -503,6 +503,31 @@
                     </div>
                 </div>
                 
+                <!-- Exam Difficulty -->
+                <div class="form-group">
+                    <label for="exam_difficulty">Exam Difficulty<span class="required-indicator">*</span></label>
+                    <select id="exam_difficulty" name="exam_difficulty" required>
+                        <option value="">Select Difficulty Level</option>
+                        <optgroup label="High School">
+                            <option value="High School - Freshman">High School - Freshman</option>
+                            <option value="High School - Sophomore">High School - Sophomore</option>
+                            <option value="High School - Junior">High School - Junior</option>
+                            <option value="High School - Senior">High School - Senior</option>
+                        </optgroup>
+                        <optgroup label="Undergraduate">
+                            <option value="Undergraduate - Freshman">Undergraduate - Freshman</option>
+                            <option value="Undergraduate - Sophomore">Undergraduate - Sophomore</option>
+                            <option value="Undergraduate - Junior">Undergraduate - Junior</option>
+                            <option value="Undergraduate - Senior" selected>Undergraduate - Senior</option>
+                        </optgroup>
+                        <optgroup label="Graduate">
+                            <option value="Graduate">Graduate</option>
+                            <option value="PhD">PhD</option>
+                        </optgroup>
+                    </select>
+                    <p class="info-text">The expected difficulty level (by school year / grade). This is passed to the AI so questions are appropriate for that level.</p>
+                </div>
+                
                 <!-- Timed Exam Selection -->
                 <div class="form-group">
                     <label>Timed Exam</label>

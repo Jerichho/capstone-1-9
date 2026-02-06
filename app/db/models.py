@@ -54,6 +54,9 @@ class Exam(Base):
     date_published = Column(DateTime(timezone=True), nullable=True)  # When exam was published
     date_end_availability = Column(DateTime(timezone=True), nullable=True)  # When exam availability ends
     
+    # Exam difficulty (school year / grade level, e.g., "Undergraduate - Senior", "Graduate", "PhD")
+    exam_difficulty = Column(String(80), nullable=True)
+    
     # Timed exam fields
     is_timed = Column(Boolean, default=False, nullable=False)  # Whether the exam is timed
     duration_hours = Column(Integer, nullable=True)  # Exam duration in hours (if timed)

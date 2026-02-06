@@ -1066,6 +1066,7 @@ async def create_exam(
         exam_name = form_data.get("exam_name", "").strip()
         exam_topic = form_data.get("exam_topic", "").strip()
         num_questions_str = form_data.get("num_questions", "").strip()
+        exam_difficulty = form_data.get("exam_difficulty", "").strip()
         llm_prompt = form_data.get("llm_prompt", "").strip()  # Additional details (optional)
         
         # Extract timed exam fields
@@ -1092,6 +1093,8 @@ async def create_exam(
             return RedirectResponse(url="/teacher/create-exam?error=Exam name is required", status_code=302)
         if not exam_topic:
             return RedirectResponse(url="/teacher/create-exam?error=Exam topic is required", status_code=302)
+        if not exam_difficulty:
+            return RedirectResponse(url="/teacher/create-exam?error=Exam difficulty is required", status_code=302)
         if not num_questions_str:
             return RedirectResponse(url="/teacher/create-exam?error=Number of questions is required", status_code=302)
         
@@ -1156,6 +1159,7 @@ async def create_exam(
             generated_exam = await generator.generate_exam(
                 topic=exam_topic,
                 num_questions=num_questions,
+                difficulty=exam_difficulty,
                 additional_details=llm_prompt if llm_prompt else ""
             )
         except Exception as e:
@@ -1230,6 +1234,7 @@ async def create_exam(
                 status="not_started",  # Not yet published
                 # Store topic and additional details in final_explanation field
                 final_explanation=exam_metadata,
+                exam_difficulty=exam_difficulty,
                 # Timed exam fields
                 is_timed=is_timed,
                 duration_hours=duration_hours if is_timed else None,
@@ -1535,12 +1540,14 @@ async def regenerate_exam_questions(
         Exam.date_published.is_(None)  # Only unpublished
     ).all()
     
-    # Generate new questions
+    # Generate new questions (use stored exam_difficulty; default for legacy exams)
+    difficulty = exam.exam_difficulty or "Undergraduate - Senior"
     generator = QuestionGenerator()
     try:
         generated_exam = await generator.generate_exam(
             topic=exam_topic,
             num_questions=num_questions,
+            difficulty=difficulty,
             additional_details=additional_details if additional_details else ""
         )
     except Exception as e:

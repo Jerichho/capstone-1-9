@@ -226,7 +226,7 @@ Required JSON format:
         }
         return GeneratedQuestion(**generic_fallback)
     
-    async def generate_exam(self, topic: str, num_questions: int, additional_details: str = "") -> GeneratedExam:
+    async def generate_exam(self, topic: str, num_questions: int, difficulty: str = "Undergraduate - Senior", additional_details: str = "") -> GeneratedExam:
         """Generate multiple exam questions at once using the LLM."""
         logger.info(f"Generating exam with {num_questions} questions on topic: {topic}")
         
@@ -269,12 +269,13 @@ Required JSON format:
 - Any other guidance provided"""
         else:
             additional_details_section = ""
-            guidance_section = "Since no additional details were provided, create well-rounded questions that cover the topic comprehensively. Make reasonable assumptions about appropriate difficulty level and scope."
+            guidance_section = "Since no additional details were provided, create well-rounded questions that cover the topic comprehensively."
         
         prompt = format_prompt(
             exam_template,
             topic=topic,
             num_questions=num_questions,
+            difficulty_level=difficulty,
             additional_details_section=additional_details_section,
             guidance_section=guidance_section
         )
@@ -285,6 +286,9 @@ IMPORTANT: Respond ONLY in English. Do NOT include any explanatory text before o
 
 Topic: {topic}
 Number of Questions: {num_questions}
+Difficulty Level: {difficulty}
+
+This will be a {difficulty} level exam. Generate questions appropriate for this academic level in depth, complexity, and expectations.
 {f'Additional Details: {additional_details}' if additional_details else ''}
 
 CRITICAL REQUIREMENTS:

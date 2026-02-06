@@ -8,6 +8,10 @@ IMPORTANT:
 
 Topic: {topic}
 Number of Questions: {num_questions}
+Difficulty Level: {difficulty_level}
+
+This will be a {difficulty_level} level exam. Generate questions that are appropriate in depth, complexity, and expectations for students at this academic level.
+
 {additional_details_section}
 
 Your task is to generate {num_questions} unique, high-quality exam questions that:

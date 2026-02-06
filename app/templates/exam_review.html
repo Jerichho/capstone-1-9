@@ -507,6 +507,10 @@
                     <div class="info-value">{{ exam.quarter_year }}</div>
                 </div>
                 <div class="info-item">
+                    <div class="info-label">Exam Difficulty</div>
+                    <div class="info-value">{{ exam.exam_difficulty or 'Not specified' }}</div>
+                </div>
+                <div class="info-item">
                     <div class="info-label">Status</div>
                     <div class="info-value">
                         {% if exam.date_published %}
