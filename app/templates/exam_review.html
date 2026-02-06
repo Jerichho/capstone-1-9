@@ -616,22 +616,17 @@
                         This is optional - the AI can create a good exam from just the topic, but more details will result in a better exam.
                     </p>
                 </div>
-                <div class="button-group">
+                <div class="button-group" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
                     <a href="/teacher/dashboard" class="btn btn-secondary">Cancel</a>
                     <button type="submit" class="btn btn-primary">Generate and Review Again</button>
+                    {% if not exam.date_published %}
+                    <button type="submit" form="publish-form" class="btn btn-publish">Publish Exam</button>
+                    {% endif %}
                 </div>
             </div>
         </form>
-
-        <!-- Publish Exam Section -->
         {% if not exam.date_published %}
-        <div class="panel">
-            <div class="button-group" style="margin-top: 0;">
-                <form method="post" action="/teacher/exam/{{ exam.exam_id }}/publish" onsubmit="return confirm('Are you sure you want to publish this exam? Once published, it will be available to all students in the specified sections.');" style="margin: 0;">
-                    <button type="submit" class="btn btn-publish">Publish Exam</button>
-                </form>
-            </div>
-        </div>
+        <form id="publish-form" method="post" action="/teacher/exam/{{ exam.exam_id }}/publish" onsubmit="return confirm('Are you sure you want to publish this exam? Once published, it will be available to all students in the specified sections.');" style="display: none;"></form>
         {% else %}
         <div class="alert alert-info">
             <strong>This exam has been published.</strong> 
