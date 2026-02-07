@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Question {{ question.question_number }} - DePaul BlueVox</title>
+    <link rel="icon" type="image/png" href="/static/assets/depaul-shield.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/bluevox.css">
+    <style>
+      :root {
+        --page-text: rgba(255, 255, 255, 0.9);
+        --muted: rgba(255, 255, 255, 0.7);
+        --accent: rgba(120, 190, 255, 0.75);
+        --accent-soft: rgba(90, 160, 255, 0.22);
+        --panel-bg: rgba(2, 10, 28, 0.65);
+        --panel-border: rgba(120, 175, 255, 0.3);
+        --field-bg: rgba(2, 10, 28, 0.38);
+        --field-border: rgba(120, 175, 255, 0.55);
+        --field-border-focus: rgba(150, 210, 255, 0.85);
+        --btn-primary: rgba(70, 150, 255, 0.92);
+        --btn-primary-hover: rgba(90, 170, 255, 0.95);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      input[type="text"], textarea {
+        background: var(--field-bg) !important;
+        border: 1px solid var(--field-border) !important;
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
+      input:focus, textarea:focus {
+        outline: none !important;
+        border-color: var(--field-border-focus) !important;
+        box-shadow: 0 0 0 3px rgba(150, 210, 255, 0.15) !important;
+      }
+      body.bluevox-form {
+        margin: 0; padding: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        color: var(--page-text);
+        overflow-x: hidden;
+        min-height: 100vh;
+        background: radial-gradient(1100px 760px at 88% 55%, rgba(40, 165, 255, 0.34), rgba(0, 0, 0, 0) 62%),
+          radial-gradient(900px 650px at 92% 60%, rgba(20, 120, 255, 0.20), rgba(0, 0, 0, 0) 62%),
+          linear-gradient(90deg, #02040b, #031531 55%, #062f67);
+        position: relative;
+      }
+      .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        position: relative;
+        z-index: 1;
+      }
+      .form-card {
+        background: var(--panel-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(120, 175, 255, 0.15);
+        border-radius: 10px;
+        padding: 32px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      }
+      .page-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 24px;
+        letter-spacing: -0.5px;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+        font-size: 14px;
+      }
+      .form-group textarea {
+        width: 100%;
+        padding: 12px 16px;
+        background: var(--field-bg);
+        border: 1px solid var(--field-border);
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 14px;
+        font-family: Inter, sans-serif;
+        min-height: 120px;
+        resize: vertical;
+        line-height: 1.5;
+      }
+      .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+      }
+      .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        transition: all 0.2s ease;
+        border: none;
+      }
+      .btn-primary {
+        background: linear-gradient(180deg, var(--btn-primary), rgba(35, 105, 245, 0.88));
+        border: 1px solid rgba(170, 220, 255, 0.5);
+        color: rgba(255, 255, 255, 0.95);
+        flex: 1;
+      }
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.9);
+        flex: 1;
+      }
+      .error-message {
+        background: rgba(220, 38, 38, 0.2);
+        border: 1px solid rgba(220, 38, 38, 0.4);
+        color: rgba(255, 255, 255, 0.95);
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+      .success-message {
+        background: rgba(34, 197, 94, 0.2);
+        border: 1px solid rgba(34, 197, 94, 0.4);
+        color: rgba(255, 255, 255, 0.95);
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+      .attachment-section {
+        margin-top: 24px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+      }
+      .attachment-section h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 16px;
+      }
+      .attachment-preview {
+        margin-bottom: 16px;
+      }
+      .attachment-preview img {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 8px;
+        border: 1px solid rgba(120, 175, 255, 0.2);
+      }
+      .attachment-preview iframe {
+        width: 100%;
+        height: 400px;
+        border-radius: 8px;
+        border: 1px solid rgba(120, 175, 255, 0.2);
+      }
+
+      .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        margin: 0;
+        border: none;
+      }
+
+      .back-button:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.95);
+        transform: translateX(-2px);
+      }
+
+      .back-button::before {
+        content: "←";
+        font-size: 14px;
+        font-weight: 600;
+      }
+    </style>
+</head>
+<body class="bluevox-form">
+    <div class="form-container">
+        <div class="form-card">
+            <h1 class="page-title">Edit Question {{ question.question_number }}</h1>
+            {% if error %}
+            <div class="error-message">{{ error }}</div>
+            {% endif %}
+            {% if success %}
+            <div class="success-message">{{ success }}</div>
+            {% endif %}
+            <form method="post" action="/teacher/question/{{ question.id }}/edit">
+                <div class="form-group">
+                    <label for="question_text">Question Text <span style="color: rgba(255, 100, 100, 0.9);">*</span></label>
+                    <textarea id="question_text" name="question_text" required>{{ question.question_text }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="context">Context (Optional)</label>
+                    <textarea id="context" name="context" placeholder="Additional context or background information...">{{ question.context or '' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="rubric">Rubric / Grading Criteria (Optional)</label>
+                    <textarea id="rubric" name="rubric" placeholder="Grading rubric or criteria...">{{ question.rubric or '' }}</textarea>
+                </div>
+                <div class="attachment-section">
+                    <h3>Attachment</h3>
+                    {% if question.attachment_filename %}
+                    <div class="attachment-preview">
+                        {% if question.attachment_filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg')) %}
+                        <img src="/static/{{ question.attachment_path }}" alt="{{ question.attachment_filename }}">
+                        {% elif question.attachment_filename.lower().endswith('.pdf') %}
+                        <iframe src="/static/{{ question.attachment_path }}#toolbar=0"></iframe>
+                        {% endif %}
+                        <p style="color: rgba(255, 255, 255, 0.7); font-size: 13px; margin-top: 8px;">{{ question.attachment_filename }}</p>
+                        <form method="post" action="/teacher/question/{{ question.id }}/remove-attachment" style="margin-top: 12px;" onsubmit="return confirm('Remove this attachment?');">
+                            <button type="submit" style="background: rgba(220, 38, 38, 0.2); border: 1px solid rgba(220, 38, 38, 0.4); color: rgba(255, 255, 255, 0.9); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;">Remove Attachment</button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <p style="color: rgba(255, 255, 255, 0.5); font-size: 13px; margin-bottom: 12px;">No attachment</p>
+                    {% endif %}
+                    <form method="post" action="/teacher/question/{{ question.id }}/upload-attachment" enctype="multipart/form-data">
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="file" name="file" accept="image/*,.pdf" style="flex: 1; padding: 8px; background: var(--field-bg); border: 1px solid var(--field-border); border-radius: 6px; color: rgba(255, 255, 255, 0.95); font-size: 13px;" {% if not question.attachment_filename %}required{% endif %}>
+                            <button type="submit" style="background: var(--btn-primary); border: 1px solid rgba(170, 220, 255, 0.5); color: rgba(255, 255, 255, 0.95); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">
+                                {% if question.attachment_filename %}Replace{% else %}Add{% endif %} Image/File
+                            </button>
+                        </div>
+                        <p style="color: rgba(255, 255, 255, 0.5); font-size: 11px; margin-top: 6px;">Add an image or PDF to display with this question. (Max 10MB)</p>
+                    </form>
+                </div>
+                <div class="button-group">
+                    <a href="/teacher/exam/{{ exam.exam_id }}/review" class="btn btn-secondary" onclick="return confirmCancel(event);">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        // Track form changes
+        let formChanged = false;
+        const form = document.querySelector('form');
+        if (form) {
+            const formInputs = form.querySelectorAll('input, textarea');
+            formInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    formChanged = true;
+                });
+                input.addEventListener('input', function() {
+                    formChanged = true;
+                });
+            });
+
+            // Reset formChanged flag when form is submitted
+            form.addEventListener('submit', function() {
+                formChanged = false;
+            });
+        }
+
+        // Cancel button with warning
+        function confirmCancel(e) {
+            if (formChanged) {
+                if (!confirm('You have unsaved changes. Are you sure you want to cancel? All unsaved changes will be lost.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+        // Warn before leaving page if form has changes
+        window.addEventListener('beforeunload', function(e) {
+            if (formChanged) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                return e.returnValue;
+            }
+        });
+
+        // Ensure sidebar is present - if not, redirect to load via dashboard
+        (function() {
+            if (!document.querySelector('.sidebar') && !document.querySelector('.dashboard-layout')) {
+                const currentPath = window.location.pathname;
+                if (currentPath.startsWith('/teacher/') && currentPath !== '/teacher/dashboard') {
+                    sessionStorage.setItem('redirectAfterDashboard', currentPath + window.location.search);
+                    window.location.href = '/teacher/dashboard';
+                }
+            }
+        })();
+    </script>
+</body>
+</html>

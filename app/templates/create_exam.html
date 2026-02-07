@@ -92,6 +92,272 @@
         position: relative;
       }
 
+      /* Dashboard Layout */
+      .dashboard-layout {
+        display: flex;
+        min-height: 100vh;
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+        box-sizing: border-box;
+      }
+
+      /* Sidebar Styles */
+      .sidebar {
+        width: 260px;
+        min-width: 180px;
+        max-width: 500px;
+        background: rgba(2, 10, 28, 0.8);
+        backdrop-filter: blur(12px);
+        border-right: 1px solid rgba(120, 175, 255, 0.15);
+        padding: 32px 24px;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        left: 0;
+        height: 100vh;
+        overflow-y: auto;
+        transition: width 0.2s ease, left 0.3s ease;
+        z-index: 1000;
+      }
+
+      .sidebar.collapsed {
+        left: -260px !important;
+      }
+
+      .sidebar-resize-handle {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 4px;
+        height: 100%;
+        cursor: col-resize;
+        background: transparent;
+        z-index: 1001;
+        transition: background 0.2s ease;
+      }
+
+      .sidebar-resize-handle:hover {
+        background: rgba(120, 175, 255, 0.3);
+      }
+
+      .sidebar-resize-handle.dragging {
+        background: rgba(120, 175, 255, 0.5);
+      }
+
+      /* Sidebar Tab */
+      .sidebar-tab {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 24px;
+        height: 80px;
+        background: rgba(2, 10, 28, 0.9);
+        border: 1px solid rgba(120, 175, 255, 0.3);
+        border-left: none;
+        border-radius: 0 8px 8px 0;
+        cursor: pointer;
+        z-index: 1001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: left 0.3s ease, width 0.2s ease;
+        backdrop-filter: blur(12px);
+        left: 260px;
+      }
+
+      .sidebar-tab:hover {
+        background: rgba(2, 10, 28, 0.95);
+        border-color: rgba(120, 175, 255, 0.5);
+        width: 28px;
+      }
+
+      .sidebar-tab.sidebar-visible {
+        left: 260px;
+      }
+
+      .sidebar-tab-icon {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 16px;
+        transition: transform 0.3s ease;
+        user-select: none;
+      }
+
+      .sidebar-tab:hover .sidebar-tab-icon {
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      .sidebar-tab.collapsed .sidebar-tab-icon {
+        transform: rotate(180deg);
+      }
+
+      .sidebar-tab.collapsed {
+        left: 0 !important;
+      }
+
+
+      .sidebar-resize-handle {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 4px;
+        height: 100%;
+        cursor: col-resize;
+        background: transparent;
+        z-index: 1001;
+        transition: background 0.2s ease;
+      }
+
+      .sidebar-resize-handle:hover {
+        background: rgba(120, 175, 255, 0.3);
+      }
+
+      .sidebar-resize-handle.dragging {
+        background: rgba(120, 175, 255, 0.5);
+      }
+
+
+      .sidebar-logo {
+        margin-bottom: 48px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .sidebar-brand-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+
+      .sidebar-depaul-logo {
+        height: 32px;
+        width: auto;
+        filter: drop-shadow(0 0 8px rgba(90, 170, 255, 0.2));
+      }
+
+      .sidebar-divider {
+        width: 1px;
+        height: 28px;
+        background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.5), transparent);
+        opacity: 0.7;
+      }
+
+      .sidebar-bluevox-text {
+        font-family: "Marck Script", cursive;
+        font-size: 32px;
+        line-height: 1;
+        color: rgba(205, 232, 255, 0.95);
+        text-shadow:
+          0 0 8px rgba(90, 170, 255, 0.2),
+          0 0 16px rgba(30, 120, 255, 0.1);
+        user-select: none;
+      }
+
+      .sidebar-shield {
+        width: 48px;
+        height: auto;
+        margin-top: 6px;
+        opacity: 0.95;
+        filter: drop-shadow(0 0 8px rgba(90, 170, 255, 0.15));
+      }
+
+      .nav-menu {
+        list-style: none;
+        flex: 1;
+      }
+
+      .nav-item {
+        margin-bottom: 4px;
+      }
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .nav-link:hover {
+        background: rgba(120, 175, 255, 0.15);
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .nav-link.active {
+        background: rgba(70, 150, 255, 0.2);
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      .nav-link::before {
+        content: "";
+        width: 3px;
+        height: 0;
+        background: var(--accent);
+        border-radius: 0 2px 2px 0;
+        margin-right: 0;
+        transition: height 0.2s ease;
+      }
+
+      .nav-link.active::before {
+        height: 20px;
+        margin-right: 12px;
+      }
+
+      .sidebar-footer {
+        margin-top: auto;
+        padding-top: 20px;
+        border-top: 1px solid var(--panel-border);
+      }
+
+      .logout-btn {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        font-weight: 500;
+        width: 100%;
+        background: none;
+        border: none;
+        cursor: pointer;
+      }
+
+      .logout-btn:hover {
+        background: rgba(220, 38, 38, 0.2);
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      /* Main Content */
+      .main-content {
+        flex: 1 1 0;
+        margin-left: 260px;
+        padding: 32px 40px;
+        min-width: 0;
+        max-width: calc(100vw - 260px);
+        width: calc(100vw - 260px);
+        overflow-x: hidden !important;
+        overflow-y: auto;
+        box-sizing: border-box;
+        position: relative;
+        flex-shrink: 1;
+        transition: margin-left 0.2s ease, width 0.2s ease, max-width 0.2s ease;
+      }
+
+
       body.bluevox-form::before {
         content: "";
         position: fixed;
@@ -415,6 +681,68 @@
     </style>
 </head>
 <body class="bluevox-form">
+    <div class="dashboard-layout">
+        <!-- Sidebar Tab -->
+        <div class="sidebar-tab sidebar-visible" id="sidebar-tab">
+            <span class="sidebar-tab-icon" id="sidebar-tab-icon">◀</span>
+        </div>
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-resize-handle" id="sidebar-resize-handle"></div>
+            <div class="sidebar-logo">
+                <div class="sidebar-brand-row">
+                    <img class="sidebar-depaul-logo" src="/static/assets/depaul-logo.png" alt="DePaul" />
+                    <div class="sidebar-divider" aria-hidden="true"></div>
+                    <div class="sidebar-bluevox-text">BlueVox</div>
+                </div>
+                <img class="sidebar-shield" src="/static/assets/depaul-shield.png" alt="DePaul Shield" />
+            </div>
+            
+            <nav class="nav-menu">
+                <ul style="list-style: none; padding: 0;">
+                    <li class="nav-item">
+                        <a href="/teacher/dashboard" class="nav-link">
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/teacher/manage-students" class="nav-link">
+                            Manage Students
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/teacher/exams" class="nav-link">
+                            Exams
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/teacher/analytics" class="nav-link">
+                            Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/teacher/notifications" class="nav-link">
+                            Notifications
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/teacher/settings" class="nav-link">
+                            Settings
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="/" class="logout-btn">
+                    Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
     <div class="form-container">
         <div class="form-card">
             <div class="form-header">
@@ -582,7 +910,7 @@
                 </div>
                 
                 <div class="button-group">
-                    <a href="/teacher/dashboard" class="bluevox-btn bluevox-btn-secondary" style="text-align: center;">Cancel</a>
+                    <a href="/teacher/dashboard" class="bluevox-btn bluevox-btn-secondary" style="text-align: center;" onclick="return confirmCancel(event);">Cancel</a>
                     <button type="submit" class="bluevox-btn" id="generate-btn" style="flex: 1;">Generate and Review</button>
                 </div>
             </form>
@@ -763,6 +1091,270 @@
                 console.log(`  ${key}: ${value}`);
             }
         });
+
+        // Track form changes
+        let formChanged = false;
+        const form = document.getElementById('create-exam-form');
+        if (form) {
+            const formInputs = form.querySelectorAll('input, select, textarea');
+            formInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    formChanged = true;
+                });
+                input.addEventListener('input', function() {
+                    formChanged = true;
+                });
+            });
+        }
+
+        // Cancel button with warning
+        function confirmCancel(e) {
+            if (formChanged) {
+                if (!confirm('You have entered information. Are you sure you want to cancel? All entered data will be lost.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Warn before leaving page if form has changes
+        window.addEventListener('beforeunload', function(e) {
+            if (formChanged) {
+                e.preventDefault();
+                e.returnValue = 'You have entered information. Are you sure you want to leave? All entered data will be lost.';
+                return e.returnValue;
+            }
+        });
+    </script>
+        </main>
+    </div>
+
+    <script>
+        // Sidebar Resize and Toggle Functionality
+        (function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const resizeHandle = document.getElementById('sidebar-resize-handle');
+            const sidebarTab = document.getElementById('sidebar-tab');
+            
+            if (!sidebar || !mainContent || !resizeHandle || !sidebarTab) return;
+            
+            // Load saved sidebar state
+            const savedWidth = localStorage.getItem('sidebarWidth');
+            const savedVisibility = localStorage.getItem('sidebarVisible');
+            
+            // Define helper functions first
+            function updateMainContentMargin(sidebarWidth) {
+                if (!sidebar.classList.contains('collapsed')) {
+                    mainContent.style.marginLeft = sidebarWidth + 'px';
+                    mainContent.style.width = `calc(100vw - ${sidebarWidth}px)`;
+                    mainContent.style.maxWidth = `calc(100vw - ${sidebarWidth}px)`;
+                }
+            }
+            
+            function updateTabPosition(sidebarWidth) {
+                if (!sidebar.classList.contains('collapsed')) {
+                    sidebarTab.style.left = sidebarWidth + 'px';
+                }
+            }
+            
+            const sidebarTabIcon = document.getElementById('sidebar-tab-icon');
+            
+            if (savedWidth) {
+                sidebar.style.width = savedWidth + 'px';
+                updateMainContentMargin(parseInt(savedWidth));
+                updateTabPosition(parseInt(savedWidth));
+            }
+            
+            if (savedVisibility === 'false') {
+                // Initialize hidden state
+                const sidebarWidth = parseInt(window.getComputedStyle(sidebar).width, 10);
+                sidebar.style.left = `-${sidebarWidth}px`;
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('sidebar-hidden');
+                sidebarTab.classList.add('collapsed');
+                sidebarTab.classList.remove('sidebar-visible');
+                sidebarTab.style.left = '0';
+                if (sidebarTabIcon) sidebarTabIcon.textContent = '▶';
+                // Expand main content to full width
+                mainContent.style.marginLeft = '0';
+                mainContent.style.width = '100vw';
+                mainContent.style.maxWidth = '100vw';
+            }
+            
+            // Tab toggle functionality
+            let isDraggingTab = false;
+            let dragStartX = 0;
+            let dragStartLeft = 0;
+            let hasMoved = false;
+            
+            sidebarTab.addEventListener('mousedown', function(e) {
+                isDraggingTab = true;
+                hasMoved = false;
+                dragStartX = e.clientX;
+                dragStartLeft = sidebar.classList.contains('collapsed') ? 0 : parseInt(window.getComputedStyle(sidebar).width, 10);
+                document.body.style.cursor = 'grabbing';
+                document.body.style.userSelect = 'none';
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (!isDraggingTab) return;
+                
+                const deltaX = e.clientX - dragStartX;
+                
+                // Check if user has moved the mouse significantly
+                if (Math.abs(deltaX) > 5) {
+                    hasMoved = true;
+                }
+                
+                const sidebarWidth = parseInt(window.getComputedStyle(sidebar).width, 10);
+                const newLeft = dragStartLeft + deltaX;
+                
+                // Update tab position during drag for visual feedback
+                if (sidebar.classList.contains('collapsed')) {
+                    // When hidden, tab can only move right
+                    sidebarTab.style.left = Math.max(0, newLeft) + 'px';
+                } else {
+                    // When visible, tab can only move left
+                    sidebarTab.style.left = Math.min(sidebarWidth, newLeft) + 'px';
+                }
+            });
+            
+            document.addEventListener('mouseup', function(e) {
+                if (isDraggingTab) {
+                    const deltaX = e.clientX - dragStartX;
+                    
+                    // If user dragged significantly, toggle based on direction
+                    if (hasMoved && Math.abs(deltaX) > 20) {
+                        if (deltaX < -20 && !sidebar.classList.contains('collapsed')) {
+                            // Dragged left - hide sidebar
+                            hideSidebar();
+                        } else if (deltaX > 20 && sidebar.classList.contains('collapsed')) {
+                            // Dragged right - show sidebar
+                            showSidebar();
+                        } else {
+                            // Reset tab position
+                            resetTabPosition();
+                        }
+                    } else if (!hasMoved) {
+                        // Simple click - toggle
+                        if (sidebar.classList.contains('collapsed')) {
+                            showSidebar();
+                        } else {
+                            hideSidebar();
+                        }
+                    } else {
+                        // Small movement - reset position
+                        resetTabPosition();
+                    }
+                    
+                    isDraggingTab = false;
+                    hasMoved = false;
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+            });
+            
+            function resetTabPosition() {
+                const isHidden = sidebar.classList.contains('collapsed');
+                if (isHidden) {
+                    sidebarTab.style.left = '0';
+                } else {
+                    const sidebarWidth = parseInt(window.getComputedStyle(sidebar).width, 10);
+                    sidebarTab.style.left = sidebarWidth + 'px';
+                }
+            }
+            
+            const sidebarTabIcon = document.getElementById('sidebar-tab-icon');
+            
+            function hideSidebar() {
+                const sidebarWidth = parseInt(window.getComputedStyle(sidebar).width, 10);
+                sidebar.style.left = `-${sidebarWidth}px`;
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('sidebar-hidden');
+                sidebarTab.classList.add('collapsed');
+                sidebarTab.classList.remove('sidebar-visible');
+                sidebarTab.style.left = '0';
+                if (sidebarTabIcon) sidebarTabIcon.textContent = '▶';
+                // Expand main content to full width
+                mainContent.style.marginLeft = '0';
+                mainContent.style.width = '100vw';
+                mainContent.style.maxWidth = '100vw';
+                localStorage.setItem('sidebarVisible', 'false');
+            }
+            
+            function showSidebar() {
+                const sidebarWidth = parseInt(window.getComputedStyle(sidebar).width, 10);
+                sidebar.style.left = '0';
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-hidden');
+                sidebarTab.classList.remove('collapsed');
+                sidebarTab.classList.add('sidebar-visible');
+                sidebarTab.style.left = sidebarWidth + 'px';
+                if (sidebarTabIcon) sidebarTabIcon.textContent = '◀';
+                // Adjust main content to account for sidebar
+                updateMainContentMargin(sidebarWidth);
+                localStorage.setItem('sidebarVisible', 'true');
+            }
+            
+            function toggleSidebar() {
+                if (sidebar.classList.contains('collapsed')) {
+                    showSidebar();
+                } else {
+                    hideSidebar();
+                }
+            }
+            
+            // Resize functionality
+            let isResizing = false;
+            let startX = 0;
+            let startWidth = 0;
+            
+            resizeHandle.addEventListener('mousedown', function(e) {
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = parseInt(window.getComputedStyle(sidebar).width, 10);
+                resizeHandle.classList.add('dragging');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (!isResizing) return;
+                
+                const width = startWidth + (e.clientX - startX);
+                const minWidth = 180;
+                const maxWidth = 500;
+                
+                if (width >= minWidth && width <= maxWidth) {
+                    sidebar.style.width = width + 'px';
+                    updateMainContentMargin(width);
+                    updateTabPosition(width);
+                }
+            });
+            
+            document.addEventListener('mouseup', function() {
+                if (isResizing) {
+                    isResizing = false;
+                    resizeHandle.classList.remove('dragging');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                    
+                    // Save width to localStorage
+                    const currentWidth = parseInt(window.getComputedStyle(sidebar).width, 10);
+                    localStorage.setItem('sidebarWidth', currentWidth);
+                }
+            });
+            
+            // Initialize tab position
+            if (!sidebar.classList.contains('collapsed')) {
+                const sidebarWidth = parseInt(window.getComputedStyle(sidebar).width, 10);
+                sidebarTab.style.left = sidebarWidth + 'px';
+            }
+        })();
     </script>
 </body>
 </html>

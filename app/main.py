@@ -1,7 +1,9 @@
 """Main FastAPI application."""
 import logging
-from fastapi import FastAPI, Request, Depends, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+import uuid
+from pathlib import Path
+from fastapi import FastAPI, Request, Depends, Form, File, UploadFile, HTTPException
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
 from sqlalchemy.orm import Session, joinedload
@@ -43,6 +45,10 @@ app.include_router(api_router, prefix="/api")
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# Create uploads directory if it doesn't exist
+UPLOAD_DIR = Path("app/static/uploads/questions")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # Templates
 env = Environment(loader=FileSystemLoader("app/templates"))
@@ -91,15 +97,28 @@ async def student_dashboard(request: Request, db: Session = Depends(get_db)):
                     "course": course
                 })
     
-    # Get open exams available to the student (published, not terminated, template exams)
+    # Get open exams available to the student (published, not terminated, enabled, template exams)
     now = datetime.now(timezone.utc)
-    open_exams_query = db.query(Exam).filter(
-        Exam.date_published.isnot(None),  # Must be published
-        Exam.status != "terminated",  # Not terminated
-        Exam.student_id.is_(None)  # Only template exams (instructor-created)
-    ).order_by(Exam.date_published.desc())
+    # Check if is_enabled column exists (for backward compatibility)
+    try:
+        # Try to query with is_enabled filter
+        open_exams_query = db.query(Exam).filter(
+            Exam.date_published.isnot(None),  # Must be published
+            Exam.status != "terminated",  # Not terminated
+            Exam.is_enabled == True,  # Must be enabled
+            Exam.student_id.is_(None)  # Only template exams (instructor-created)
+        ).order_by(Exam.date_published.desc())
+        open_exams = open_exams_query.all()
+    except Exception as e:
+        # Column doesn't exist yet, query without is_enabled filter
+        logger.warning(f"is_enabled column not found, querying without it: {e}")
+        open_exams_query = db.query(Exam).filter(
+            Exam.date_published.isnot(None),  # Must be published
+            Exam.status != "terminated",  # Not terminated
+            Exam.student_id.is_(None)  # Only template exams (instructor-created)
+        ).order_by(Exam.date_published.desc())
+        open_exams = open_exams_query.all()
     
-    open_exams = open_exams_query.all()
     
     # Filter out exams student has already completed
     available_open_exams = []
@@ -1486,6 +1505,191 @@ async def update_exam(
         db.rollback()
         return RedirectResponse(url=f"/teacher/exam/{exam_id}/review?error=Error updating exam: {str(e)}", status_code=302)
 
+@app.post("/teacher/question/{question_id}/upload-attachment")
+async def upload_question_attachment(
+    request: Request,
+    question_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """Upload a file attachment for a question."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get question from database
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        return RedirectResponse(url="/teacher/dashboard?error=question_not_found", status_code=302)
+    
+    # Verify question belongs to instructor's exam
+    exam = db.query(Exam).filter(Exam.id == question.exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=access_denied", status_code=302)
+    
+    # Allow uploads for both published and unpublished exams (teachers can always add files)
+    
+    # Validate file type (allow PDFs and images)
+    allowed_extensions = {'.pdf', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'}
+    file_ext = Path(file.filename).suffix.lower()
+    if file_ext not in allowed_extensions:
+        return RedirectResponse(
+            url=f"/teacher/exam/{exam.exam_id}/review?error=File type not allowed. Allowed types: PDF, PNG, JPG, JPEG, GIF, WEBP, SVG",
+            status_code=302
+        )
+    
+    # Validate file size (max 10MB)
+    file_content = await file.read()
+    if len(file_content) > 10 * 1024 * 1024:  # 10MB
+        return RedirectResponse(
+            url=f"/teacher/exam/{exam.exam_id}/review?error=File size exceeds 10MB limit",
+            status_code=302
+        )
+    
+    try:
+        # Generate unique filename
+        unique_id = str(uuid.uuid4())
+        safe_filename = "".join(c for c in file.filename if c.isalnum() or c in "._- ")[:100]
+        filename = f"{question_id}_{unique_id}_{safe_filename}"
+        file_path = UPLOAD_DIR / filename
+        
+        # Save file
+        with open(file_path, "wb") as f:
+            f.write(file_content)
+        
+        # Delete old file if exists
+        if question.attachment_path:
+            old_path = Path("app/static") / question.attachment_path
+            if old_path.exists():
+                old_path.unlink()
+        
+        # Update question with attachment info
+        # Store relative path from static directory
+        question.attachment_path = f"uploads/questions/{filename}"
+        question.attachment_filename = file.filename
+        db.commit()
+        
+        return RedirectResponse(
+            url=f"/teacher/exam/{exam.exam_id}/review?success=File uploaded successfully",
+            status_code=302
+        )
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error uploading file: {e}")
+        return RedirectResponse(
+            url=f"/teacher/exam/{exam.exam_id}/review?error=Error uploading file: {str(e)}",
+            status_code=302
+        )
+
+@app.get("/teacher/question/{question_id}/attachment")
+async def download_question_attachment(
+    request: Request,
+    question_id: int,
+    db: Session = Depends(get_db)
+):
+    """Download a question attachment."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        raise HTTPException(status_code=401, detail="Login required")
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Login required")
+    
+    # Get question from database
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+    
+    # Verify access (teacher owns exam, or student is taking the exam)
+    exam = db.query(Exam).filter(Exam.id == question.exam_id).first()
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+    
+    if user.role == "teacher":
+        if exam.instructor_id != user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+    elif user.role == "student":
+        # Student can access if they're assigned to this exam
+        student_record = db.query(Student).filter(Student.username == user.email).first()
+        if not student_record or exam.student_id != student_record.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if not question.attachment_path:
+        raise HTTPException(status_code=404, detail="No attachment found")
+    
+    # Construct full path from static directory
+    file_path = Path("app/static") / question.attachment_path
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return FileResponse(
+        path=str(file_path),
+        filename=question.attachment_filename or "attachment",
+        media_type="application/octet-stream"
+    )
+
+@app.post("/teacher/question/{question_id}/remove-attachment")
+async def remove_question_attachment(
+    request: Request,
+    question_id: int,
+    db: Session = Depends(get_db)
+):
+    """Remove a question attachment."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get question from database
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        return RedirectResponse(url="/teacher/dashboard?error=question_not_found", status_code=302)
+    
+    # Verify question belongs to instructor's exam
+    exam = db.query(Exam).filter(Exam.id == question.exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=access_denied", status_code=302)
+    
+    try:
+        # Delete file if exists
+        if question.attachment_path:
+            file_path = Path("app/static") / question.attachment_path
+            if file_path.exists():
+                file_path.unlink()
+        
+        # Clear attachment fields
+        question.attachment_path = None
+        question.attachment_filename = None
+        db.commit()
+        
+        return RedirectResponse(
+            url=f"/teacher/exam/{exam.exam_id}/review?success=Attachment removed successfully",
+            status_code=302
+        )
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error removing attachment: {e}")
+        return RedirectResponse(
+            url=f"/teacher/exam/{exam.exam_id}/review?error=Error removing attachment: {str(e)}",
+            status_code=302
+        )
+
 @app.post("/teacher/exam/{exam_id}/regenerate")
 async def regenerate_exam_questions(
     request: Request,
@@ -1758,6 +1962,508 @@ async def terminate_exam(
         logger.error(f"Error terminating exam: {e}")
         return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Failed to terminate exam", status_code=302)
 
+@app.post("/teacher/exam/{exam_id}/reopen")
+async def reopen_exam(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Reopen a terminated exam so it's available to students again."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
+    
+    # Allow reopening terminated or completed exams
+    if exam.status not in ["terminated", "completed"]:
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Can only reopen terminated or completed exams", status_code=302)
+    
+    # Get all related exams (same course, exam name, quarter) that are terminated or completed
+    related_exams = db.query(Exam).filter(
+        Exam.instructor_id == user.id,
+        Exam.course_number == exam.course_number,
+        Exam.exam_name == exam.exam_name,
+        Exam.quarter_year == exam.quarter_year,
+        Exam.status.in_(["terminated", "completed"])
+    ).all()
+    
+    # Reopen all related exams at once
+    for related_exam in related_exams:
+        # Restore to active status if it was published, otherwise not_started
+        if related_exam.date_published:
+            related_exam.status = "active"
+        else:
+            related_exam.status = "not_started"
+        # Clear end availability date
+        related_exam.date_end_availability = None
+    
+    try:
+        db.commit()
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?success=Exam reopened successfully", status_code=302)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error reopening exam: {e}")
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Failed to reopen exam", status_code=302)
+
+@app.post("/teacher/exam/{exam_id}/disable")
+async def disable_exam(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Disable an exam so students cannot access it."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
+    
+    # Only allow disabling template exams (not student-specific exams)
+    if exam.student_id is not None:
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Cannot disable student-specific exams", status_code=302)
+    
+    try:
+        # Check if is_enabled column exists
+        if not hasattr(Exam, 'is_enabled'):
+            return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Enable/Disable feature not available. Please restart the application to add the required database column.", status_code=302)
+        
+        # Disable exam and all related template exams
+        related_exams = db.query(Exam).filter(
+            Exam.instructor_id == user.id,
+            Exam.course_number == exam.course_number,
+            Exam.exam_name == exam.exam_name,
+            Exam.quarter_year == exam.quarter_year,
+            Exam.student_id.is_(None)  # Only template exams
+        ).all()
+        
+        for related_exam in related_exams:
+            related_exam.is_enabled = False
+        
+        db.commit()
+        return RedirectResponse(url=f"/teacher/exams?success=Exam disabled successfully", status_code=302)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error disabling exam: {e}")
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Failed to disable exam: {str(e)}", status_code=302)
+
+@app.post("/teacher/exam/{exam_id}/enable")
+async def enable_exam(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Enable an exam so students can access it."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
+    
+    # Only allow enabling template exams (not student-specific exams)
+    if exam.student_id is not None:
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Cannot enable student-specific exams", status_code=302)
+    
+    try:
+        # Check if is_enabled column exists
+        if not hasattr(Exam, 'is_enabled'):
+            return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Enable/Disable feature not available. Please restart the application to add the required database column.", status_code=302)
+        
+        # Enable exam and all related template exams
+        related_exams = db.query(Exam).filter(
+            Exam.instructor_id == user.id,
+            Exam.course_number == exam.course_number,
+            Exam.exam_name == exam.exam_name,
+            Exam.quarter_year == exam.quarter_year,
+            Exam.student_id.is_(None)  # Only template exams
+        ).all()
+        
+        for related_exam in related_exams:
+            related_exam.is_enabled = True
+        
+        db.commit()
+        return RedirectResponse(url=f"/teacher/exams?success=Exam enabled successfully", status_code=302)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error enabling exam: {e}")
+        return RedirectResponse(url=f"/teacher/exams?error=Failed to enable exam: {str(e)}", status_code=302)
+
+@app.post("/teacher/exam/{exam_id}/toggle-enable")
+async def toggle_enable_exam(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Toggle enable/disable status of an exam."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/exams?error=exam_not_found", status_code=302)
+    
+    # Only allow toggling template exams (not student-specific exams)
+    if exam.student_id is not None:
+        return RedirectResponse(url=f"/teacher/exams?error=Cannot toggle student-specific exams", status_code=302)
+    
+    try:
+        # Check if is_enabled column exists
+        if not hasattr(Exam, 'is_enabled'):
+            return RedirectResponse(url=f"/teacher/exams?error=Enable/Disable feature not available", status_code=302)
+        
+        # Toggle exam and all related template exams
+        related_exams = db.query(Exam).filter(
+            Exam.instructor_id == user.id,
+            Exam.course_number == exam.course_number,
+            Exam.exam_name == exam.exam_name,
+            Exam.quarter_year == exam.quarter_year,
+            Exam.student_id.is_(None)  # Only template exams
+        ).all()
+        
+        new_status = not exam.is_enabled
+        for related_exam in related_exams:
+            related_exam.is_enabled = new_status
+        
+        db.commit()
+        status_text = "enabled" if new_status else "disabled"
+        return RedirectResponse(url=f"/teacher/exams?success=Exam {status_text} successfully", status_code=302)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error toggling exam: {e}")
+        return RedirectResponse(url=f"/teacher/exams?error=Failed to toggle exam: {str(e)}", status_code=302)
+
+@app.post("/teacher/exam/{exam_id}/quick-edit")
+async def quick_edit_exam(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Quick edit exam name, course number, or section from exams list."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/exams?error=exam_not_found", status_code=302)
+    
+    # Only allow editing template exams (not student-specific exams)
+    if exam.student_id is not None:
+        return RedirectResponse(url=f"/teacher/exams?error=Cannot edit student-specific exams", status_code=302)
+    
+    # Get form data
+    form_data = await request.form()
+    field = form_data.get("field", "").strip()
+    value = form_data.get("value", "").strip()
+    
+    if not field or not value:
+        return RedirectResponse(url="/teacher/exams?error=Invalid field or value", status_code=302)
+    
+    try:
+        # Get all related exams (same course, exam name, quarter) - template exams only
+        related_exams = db.query(Exam).filter(
+            Exam.instructor_id == user.id,
+            Exam.course_number == exam.course_number,
+            Exam.exam_name == exam.exam_name,
+            Exam.quarter_year == exam.quarter_year,
+            Exam.student_id.is_(None)  # Only template exams
+        ).all()
+        
+        if field == "exam_name":
+            # Update exam name for all related exams
+            for related_exam in related_exams:
+                related_exam.exam_name = value
+                # Update exam_id to reflect new name
+                new_exam_id = f"{related_exam.course_number}-{related_exam.section}-{value.lower().replace(' ', '-')}-{related_exam.quarter_year}"
+                related_exam.exam_id = new_exam_id
+        elif field == "course_number":
+            # Update course number for all related exams
+            value = value.upper()
+            for related_exam in related_exams:
+                related_exam.course_number = value
+                # Update exam_id to reflect new course
+                new_exam_id = f"{value}-{related_exam.section}-{related_exam.exam_name.lower().replace(' ', '-')}-{related_exam.quarter_year}"
+                related_exam.exam_id = new_exam_id
+        elif field == "section":
+            # Update section for this specific exam only (sections are unique)
+            exam.section = value
+            # Update exam_id to reflect new section
+            new_exam_id = f"{exam.course_number}-{value}-{exam.exam_name.lower().replace(' ', '-')}-{exam.quarter_year}"
+            exam.exam_id = new_exam_id
+        else:
+            return RedirectResponse(url="/teacher/exams?error=Invalid field", status_code=302)
+        
+        db.commit()
+        return RedirectResponse(url="/teacher/exams?success=Exam updated successfully", status_code=302)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating exam: {e}")
+        return RedirectResponse(url=f"/teacher/exams?error=Failed to update exam: {str(e)}", status_code=302)
+
+@app.get("/teacher/exam/{exam_id}/edit", response_class=HTMLResponse)
+async def edit_exam_page(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db)
+):
+    """Display edit exam page."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
+    
+    # Only allow editing template exams (not student-specific exams)
+    if exam.student_id is not None:
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}?error=Cannot edit student-specific exams", status_code=302)
+    
+    # Get all courses for dropdown
+    courses = db.query(Course).filter(Course.instructor_id == user.id).all()
+    
+    error = request.query_params.get("error", "")
+    success = request.query_params.get("success", "")
+    
+    return render_template("edit_exam.html", {
+        "request": request,
+        "exam": exam,
+        "courses": courses,
+        "error": error,
+        "success": success
+    })
+
+@app.post("/teacher/exam/{exam_id}/edit")
+async def update_exam_details(
+    request: Request,
+    exam_id: str,
+    db: Session = Depends(get_db),
+    exam_name: str = Form(...),
+    course_number: str = Form(...),
+    section: str = Form(...),
+    quarter_year: str = Form(...),
+    exam_difficulty: str = Form(None),
+    date_start: str = Form(None),
+    date_end: str = Form(None),
+    date_end_availability: str = Form(None),
+    is_timed: str = Form("false"),
+    duration_hours: int = Form(None),
+    duration_minutes: int = Form(None)
+):
+    """Update exam details."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get exam from database
+    exam = db.query(Exam).filter(Exam.exam_id == exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=exam_not_found", status_code=302)
+    
+    # Only allow editing template exams
+    if exam.student_id is not None:
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}/edit?error=Cannot edit student-specific exams", status_code=302)
+    
+    # Get all related exams (same course, exam name, quarter)
+    related_exams = db.query(Exam).filter(
+        Exam.instructor_id == user.id,
+        Exam.course_number == exam.course_number,
+        Exam.exam_name == exam.exam_name,
+        Exam.quarter_year == exam.quarter_year,
+        Exam.student_id.is_(None)  # Only template exams
+    ).all()
+    
+    try:
+        # Parse dates
+        date_start_dt = None
+        if date_start:
+            try:
+                # datetime-local format: YYYY-MM-DDTHH:MM
+                date_start_dt = datetime.strptime(date_start, '%Y-%m-%dT%H:%M')
+                # Make timezone-aware (UTC)
+                date_start_dt = date_start_dt.replace(tzinfo=timezone.utc)
+            except Exception as e:
+                logger.warning(f"Error parsing date_start: {e}")
+                date_start_dt = None
+        
+        date_end_dt = None
+        if date_end:
+            try:
+                date_end_dt = datetime.strptime(date_end, '%Y-%m-%dT%H:%M')
+                date_end_dt = date_end_dt.replace(tzinfo=timezone.utc)
+            except Exception as e:
+                logger.warning(f"Error parsing date_end: {e}")
+                date_end_dt = None
+        
+        date_end_availability_dt = None
+        if date_end_availability:
+            try:
+                date_end_availability_dt = datetime.strptime(date_end_availability, '%Y-%m-%dT%H:%M')
+                date_end_availability_dt = date_end_availability_dt.replace(tzinfo=timezone.utc)
+            except Exception as e:
+                logger.warning(f"Error parsing date_end_availability: {e}")
+                date_end_availability_dt = None
+        
+        # Update all related exams
+        for related_exam in related_exams:
+            related_exam.exam_name = exam_name
+            related_exam.course_number = course_number
+            related_exam.section = section
+            related_exam.quarter_year = quarter_year
+            related_exam.exam_difficulty = exam_difficulty if exam_difficulty else None
+            related_exam.date_start = date_start_dt
+            related_exam.date_end = date_end_dt
+            related_exam.date_end_availability = date_end_availability_dt
+            related_exam.is_timed = is_timed == "true"
+            related_exam.duration_hours = duration_hours if duration_hours else None
+            related_exam.duration_minutes = duration_minutes if duration_minutes else None
+            
+            # Update exam_id if course/section/name changed
+            new_exam_id = f"{course_number}-{section}-{exam_name.lower().replace(' ', '-')}-{quarter_year}"
+            related_exam.exam_id = new_exam_id
+        
+        db.commit()
+        return RedirectResponse(url=f"/teacher/exam/{related_exams[0].exam_id}/edit?success=Exam updated successfully", status_code=302)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating exam: {e}")
+        return RedirectResponse(url=f"/teacher/exam/{exam_id}/edit?error=Error updating exam: {str(e)}", status_code=302)
+
+@app.get("/teacher/question/{question_id}/edit", response_class=HTMLResponse)
+async def edit_question_page(
+    request: Request,
+    question_id: int,
+    db: Session = Depends(get_db)
+):
+    """Display edit question page."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get question from database
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        return RedirectResponse(url="/teacher/dashboard?error=question_not_found", status_code=302)
+    
+    # Verify question belongs to instructor's exam
+    exam = db.query(Exam).filter(Exam.id == question.exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=access_denied", status_code=302)
+    
+    error = request.query_params.get("error", "")
+    success = request.query_params.get("success", "")
+    
+    return render_template("edit_question.html", {
+        "request": request,
+        "question": question,
+        "exam": exam,
+        "error": error,
+        "success": success
+    })
+
+@app.post("/teacher/question/{question_id}/edit")
+async def update_question(
+    request: Request,
+    question_id: int,
+    db: Session = Depends(get_db),
+    question_text: str = Form(...),
+    context: str = Form(None),
+    rubric: str = Form(None)
+):
+    """Update question details."""
+    # Get email from cookie
+    email = request.cookies.get("username")
+    if not email:
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get user from database
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.role != "teacher":
+        return RedirectResponse(url="/?error=login_required", status_code=302)
+    
+    # Get question from database
+    question = db.query(Question).filter(Question.id == question_id).first()
+    if not question:
+        return RedirectResponse(url="/teacher/dashboard?error=question_not_found", status_code=302)
+    
+    # Verify question belongs to instructor's exam
+    exam = db.query(Exam).filter(Exam.id == question.exam_id).first()
+    if not exam or exam.instructor_id != user.id:
+        return RedirectResponse(url="/teacher/dashboard?error=access_denied", status_code=302)
+    
+    try:
+        # Update question
+        question.question_text = question_text.strip()
+        question.context = context.strip() if context else None
+        question.rubric = rubric.strip() if rubric else None
+        
+        db.commit()
+        return RedirectResponse(url=f"/teacher/exam/{exam.exam_id}/review?success=Question updated successfully", status_code=302)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating question: {e}")
+        return RedirectResponse(url=f"/teacher/question/{question_id}/edit?error=Error updating question: {str(e)}", status_code=302)
 
 @app.post("/teacher/exam/{exam_id}/alter-grades")
 async def alter_grades(
@@ -2181,13 +2887,19 @@ async def teacher_exams_page(request: Request, db: Session = Depends(get_db)):
             "date_start": exam.date_start,
             "date_end": exam.date_end,
             "final_grade": exam.final_grade,
-            "student": student.username if student else None
+            "student": student.username if student else None,
+            "student_id": exam.student_id,
+            "is_enabled": getattr(exam, 'is_enabled', True)  # Default to True if column doesn't exist
         })
+    
+    # Get all courses for dropdown
+    courses = db.query(Course).filter(Course.instructor_id == user.id).all()
     
     return render_template("teacher_exams.html", {
         "request": request,
         "exams": exam_list,
-        "filter_type": filter_type
+        "filter_type": filter_type,
+        "courses": courses
     })
 
 @app.get("/teacher/analytics", response_class=HTMLResponse)

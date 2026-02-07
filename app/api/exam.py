@@ -58,6 +58,8 @@ async def get_exam(request: Request, exam_id: int, db: Session = Depends(get_db)
     status = exam_service.get_exam_status(db, exam_id)
     
     # Pass exam timing information for timer display - simplified: just pass duration
+    # Refresh question to get latest attachment info
+    db.refresh(question)
     return render_template("question.html", {
         "request": request,
         "question": question,

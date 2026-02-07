@@ -172,10 +172,44 @@
         font-size: 13px;
         margin-top: 6px;
       }
+
+      .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        margin-bottom: 20px;
+        border: none;
+      }
+
+      .back-button:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.95);
+        transform: translateX(-2px);
+      }
+
+      .back-button::before {
+        content: "←";
+        font-size: 16px;
+        font-weight: 600;
+      }
     </style>
 </head>
 <body class="bluevox-settings">
     <div class="settings-container">
+        <div style="margin-bottom: 24px;">
+            <a href="/teacher/dashboard" class="back-button" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; color: rgba(255, 255, 255, 0.9); font-size: 13px; font-weight: 500;">← Back</a>
+        </div>
         <h1 class="page-title">Settings</h1>
 
         <div class="panel">
@@ -204,11 +238,13 @@
     </div>
 
     <script>
+
         // Ensure sidebar is present - if not, redirect to load via dashboard
         (function() {
             if (!document.querySelector('.sidebar') && !document.querySelector('.dashboard-layout')) {
                 const currentPath = window.location.pathname;
                 if (currentPath.startsWith('/teacher/') && currentPath !== '/teacher/dashboard') {
+                    sessionStorage.setItem('redirectAfterDashboard', currentPath + window.location.search);
                     window.location.href = '/teacher/dashboard';
                 }
             }

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Exam - {{ exam.exam_name }} - DePaul BlueVox</title>
+    <link rel="icon" type="image/png" href="/static/assets/depaul-shield.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/bluevox.css">
+    <style>
+      :root {
+        --page-text: rgba(255, 255, 255, 0.9);
+        --muted: rgba(255, 255, 255, 0.7);
+        --accent: rgba(120, 190, 255, 0.75);
+        --accent-soft: rgba(90, 160, 255, 0.22);
+        --panel-bg: rgba(2, 10, 28, 0.65);
+        --panel-border: rgba(120, 175, 255, 0.3);
+        --field-bg: rgba(2, 10, 28, 0.38);
+        --field-border: rgba(120, 175, 255, 0.55);
+        --field-border-focus: rgba(150, 210, 255, 0.85);
+        --btn-primary: rgba(70, 150, 255, 0.92);
+        --btn-primary-hover: rgba(90, 170, 255, 0.95);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      input[type="text"], input[type="datetime-local"], select {
+        background: var(--field-bg) !important;
+        border: 1px solid var(--field-border) !important;
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
+      input:focus, select:focus {
+        outline: none !important;
+        border-color: var(--field-border-focus) !important;
+        box-shadow: 0 0 0 3px rgba(150, 210, 255, 0.15) !important;
+      }
+      select option {
+        background: rgba(2, 10, 28, 0.95) !important;
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
+      body.bluevox-form {
+        margin: 0; padding: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        color: var(--page-text);
+        overflow-x: hidden;
+        min-height: 100vh;
+        background: radial-gradient(1100px 760px at 88% 55%, rgba(40, 165, 255, 0.34), rgba(0, 0, 0, 0) 62%),
+          radial-gradient(900px 650px at 92% 60%, rgba(20, 120, 255, 0.20), rgba(0, 0, 0, 0) 62%),
+          linear-gradient(90deg, #02040b, #031531 55%, #062f67);
+        position: relative;
+      }
+      .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        position: relative;
+        z-index: 1;
+      }
+      .form-card {
+        background: var(--panel-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(120, 175, 255, 0.15);
+        border-radius: 10px;
+        padding: 32px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      }
+      .page-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 24px;
+        letter-spacing: -0.5px;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+        font-size: 14px;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 12px 16px;
+        background: var(--field-bg);
+        border: 1px solid var(--field-border);
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 14px;
+        font-family: Inter, sans-serif;
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+      }
+      .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        transition: all 0.2s ease;
+        border: none;
+      }
+      .btn-primary {
+        background: linear-gradient(180deg, var(--btn-primary), rgba(35, 105, 245, 0.88));
+        border: 1px solid rgba(170, 220, 255, 0.5);
+        color: rgba(255, 255, 255, 0.95);
+        flex: 1;
+      }
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.9);
+        flex: 1;
+      }
+      .error-message {
+        background: rgba(220, 38, 38, 0.2);
+        border: 1px solid rgba(220, 38, 38, 0.4);
+        color: rgba(255, 255, 255, 0.95);
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+      .success-message {
+        background: rgba(34, 197, 94, 0.2);
+        border: 1px solid rgba(34, 197, 94, 0.4);
+        color: rgba(255, 255, 255, 0.95);
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+      .duration-fields {
+        margin-top: 15px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        display: none;
+      }
+      .duration-fields.active {
+        display: block;
+      }
+      .duration-controls {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+      }
+
+      .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        margin: 0;
+        border: none;
+      }
+
+      .back-button:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.95);
+        transform: translateX(-2px);
+      }
+
+      .back-button::before {
+        content: "←";
+        font-size: 14px;
+        font-weight: 600;
+      }
+    </style>
+</head>
+<body class="bluevox-form">
+    <div class="form-container">
+        <div class="form-card">
+            <h1 class="page-title">Edit Exam: {{ exam.exam_name }}</h1>
+            {% if error %}
+            <div class="error-message">{{ error }}</div>
+            {% endif %}
+            {% if success %}
+            <div class="success-message">{{ success }}</div>
+            {% endif %}
+            <form method="post" action="/teacher/exam/{{ exam.exam_id }}/edit">
+                <div class="form-group">
+                    <label for="exam_name">Exam Name <span style="color: rgba(255, 100, 100, 0.9);">*</span></label>
+                    <input type="text" id="exam_name" name="exam_name" value="{{ exam.exam_name }}" required>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="course_number">Course Number <span style="color: rgba(255, 100, 100, 0.9);">*</span></label>
+                        <input type="text" id="course_number" name="course_number" value="{{ exam.course_number }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="section">Section <span style="color: rgba(255, 100, 100, 0.9);">*</span></label>
+                        <input type="text" id="section" name="section" value="{{ exam.section }}" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="quarter_year">Quarter / Year <span style="color: rgba(255, 100, 100, 0.9);">*</span></label>
+                    <input type="text" id="quarter_year" name="quarter_year" value="{{ exam.quarter_year }}" required placeholder="e.g., Spring26">
+                </div>
+                <div class="form-group">
+                    <label for="exam_difficulty">Exam Difficulty</label>
+                    <select id="exam_difficulty" name="exam_difficulty">
+                        <option value="">Select difficulty level</option>
+                        <option value="Undergraduate - Freshman" {% if exam.exam_difficulty == 'Undergraduate - Freshman' %}selected{% endif %}>Undergraduate - Freshman</option>
+                        <option value="Undergraduate - Sophomore" {% if exam.exam_difficulty == 'Undergraduate - Sophomore' %}selected{% endif %}>Undergraduate - Sophomore</option>
+                        <option value="Undergraduate - Junior" {% if exam.exam_difficulty == 'Undergraduate - Junior' %}selected{% endif %}>Undergraduate - Junior</option>
+                        <option value="Undergraduate - Senior" {% if exam.exam_difficulty == 'Undergraduate - Senior' %}selected{% endif %}>Undergraduate - Senior</option>
+                        <option value="Graduate" {% if exam.exam_difficulty == 'Graduate' %}selected{% endif %}>Graduate</option>
+                        <option value="PhD" {% if exam.exam_difficulty == 'PhD' %}selected{% endif %}>PhD</option>
+                    </select>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="date_start">Start Date/Time</label>
+                        <input type="datetime-local" id="date_start" name="date_start" value="{% if exam.date_start %}{{ exam.date_start.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                    </div>
+                    <div class="form-group">
+                        <label for="date_end">End Date/Time</label>
+                        <input type="datetime-local" id="date_end" name="date_end" value="{% if exam.date_end %}{{ exam.date_end.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="date_end_availability">End Availability Date/Time</label>
+                    <input type="datetime-local" id="date_end_availability" name="date_end_availability" value="{% if exam.date_end_availability %}{{ exam.date_end_availability.strftime('%Y-%m-%dT%H:%M') }}{% endif %}">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_timed" value="true" {% if exam.is_timed %}checked{% endif %} onchange="document.getElementById('duration-fields').classList.toggle('active', this.checked)">
+                        Enable Time Limit
+                    </label>
+                </div>
+                <div id="duration-fields" class="duration-fields {% if exam.is_timed %}active{% endif %}">
+                    <div class="duration-controls">
+                        <div>
+                            <label for="duration_hours">Hours:</label>
+                            <select id="duration_hours" name="duration_hours">
+                                <option value="">0</option>
+                                {% for i in range(1, 25) %}
+                                <option value="{{ i }}" {% if exam.duration_hours == i %}selected{% endif %}>{{ i }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="duration_minutes">Minutes:</label>
+                            <select id="duration_minutes" name="duration_minutes">
+                                <option value="">0</option>
+                                {% for i in range(5, 60, 5) %}
+                                <option value="{{ i }}" {% if exam.duration_minutes == i %}selected{% endif %}>{{ i }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <a href="/teacher/exam/{{ exam.exam_id }}" class="btn btn-secondary" onclick="return confirmCancel(event);">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        // Track form changes
+        let formChanged = false;
+        const form = document.querySelector('form');
+        if (form) {
+            const formInputs = form.querySelectorAll('input, select, textarea');
+            const originalValues = {};
+            formInputs.forEach(input => {
+                originalValues[input.name || input.id] = input.value;
+                input.addEventListener('change', function() {
+                    formChanged = true;
+                });
+                input.addEventListener('input', function() {
+                    formChanged = true;
+                });
+            });
+
+            // Reset formChanged flag when form is submitted
+            form.addEventListener('submit', function() {
+                formChanged = false;
+            });
+        }
+
+        // Cancel button with warning
+        function confirmCancel(e) {
+            if (formChanged) {
+                if (!confirm('You have unsaved changes. Are you sure you want to cancel? All unsaved changes will be lost.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+        // Warn before leaving page if form has changes
+        window.addEventListener('beforeunload', function(e) {
+            if (formChanged) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                return e.returnValue;
+            }
+        });
+
+        // Ensure sidebar is present - if not, redirect to load via dashboard
+        (function() {
+            if (!document.querySelector('.sidebar') && !document.querySelector('.dashboard-layout')) {
+                const currentPath = window.location.pathname;
+                if (currentPath.startsWith('/teacher/') && currentPath !== '/teacher/dashboard') {
+                    sessionStorage.setItem('redirectAfterDashboard', currentPath + window.location.search);
+                    window.location.href = '/teacher/dashboard';
+                }
+            }
+        })();
+    </script>
+</body>
+</html>

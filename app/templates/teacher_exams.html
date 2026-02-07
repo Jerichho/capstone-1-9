@@ -168,6 +168,23 @@
         color: rgba(255, 255, 255, 0.95);
       }
 
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .panel-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        letter-spacing: -0.2px;
+        margin: 0;
+      }
+
       .panel {
         background: var(--panel-bg);
         backdrop-filter: blur(12px);
@@ -215,9 +232,10 @@
       }
 
       .exams-table td {
-        padding: 14px 10px;
+        padding: 8px 10px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         color: rgba(255, 255, 255, 0.8);
+        vertical-align: middle;
       }
 
       .exams-table tbody tr {
@@ -276,6 +294,125 @@
         color: rgba(255, 255, 255, 0.5);
         font-style: italic;
       }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .panel-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        letter-spacing: -0.2px;
+        margin: 0;
+      }
+
+      .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        margin: 0;
+      }
+
+      .back-button:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.95);
+        transform: translateX(-2px);
+      }
+
+      .editable-field {
+        transition: all 0.2s ease;
+      }
+
+      .editable-field:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .inline-edit {
+        transition: all 0.2s ease;
+        width: 100%;
+        padding: 4px 8px;
+        background: var(--field-bg);
+        border: 1px solid var(--field-border);
+        border-radius: 4px;
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 13px;
+        box-sizing: border-box;
+      }
+
+      .inline-edit:focus {
+        outline: none;
+        border-color: var(--field-border-focus) !important;
+        box-shadow: 0 0 0 3px rgba(150, 210, 255, 0.15) !important;
+      }
+
+      .toggle-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .toggle-btn.enabled {
+        background: rgba(34, 197, 94, 0.2);
+        border-color: rgba(34, 197, 94, 0.4);
+      }
+
+      .toggle-btn.enabled:hover {
+        background: rgba(34, 197, 94, 0.3);
+        border-color: rgba(34, 197, 94, 0.5);
+      }
+
+      .toggle-btn.disabled {
+        background: rgba(220, 38, 38, 0.2);
+        border-color: rgba(220, 38, 38, 0.4);
+      }
+
+      .toggle-btn.disabled:hover {
+        background: rgba(220, 38, 38, 0.3);
+        border-color: rgba(220, 38, 38, 0.5);
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        border: none;
+      }
+
+      .btn-primary {
+        background: linear-gradient(180deg, var(--btn-primary), rgba(35, 105, 245, 0.88));
+        border: 1px solid rgba(170, 220, 255, 0.5);
+        color: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(180deg, var(--btn-primary-hover), rgba(45, 115, 255, 0.92));
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+      }
     </style>
 </head>
 <body class="bluevox-exams">
@@ -300,6 +437,13 @@
         </div>
 
         <div class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Exams List</h2>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <a href="/teacher/create-exam" class="btn btn-primary" style="text-decoration: none; padding: 10px 20px; font-size: 14px;">+ Create Exam</a>
+                    <a href="/teacher/dashboard" class="back-button" style="text-decoration: none;">← Back</a>
+                </div>
+            </div>
             {% if exams %}
             <div class="table-container">
             <table class="exams-table">
@@ -309,6 +453,7 @@
                         <th>Course</th>
                         <th>Section</th>
                         <th>Status</th>
+                        <th>Enabled</th>
                         <th>Published</th>
                         <th>Student</th>
                         <th>Grade</th>
@@ -317,21 +462,79 @@
                 </thead>
                 <tbody>
                     {% for exam in exams %}
-                    <tr>
-                        <td>{{ exam.exam_name }}</td>
-                        <td>{{ exam.course_number }}</td>
-                        <td>{{ exam.section }}</td>
+                    <tr data-exam-id="{{ exam.exam_id }}" data-student-id="{{ exam.student_id or '' }}">
+                        <td>
+                            {% if not exam.student_id %}
+                            <span class="editable-field" 
+                                  data-field="exam_name" 
+                                  data-exam-id="{{ exam.exam_id }}"
+                                  data-original-value="{{ exam.exam_name }}"
+                                  style="cursor: pointer; padding: 4px 8px; display: inline-block; width: 100%; border-radius: 4px; transition: background 0.2s;"
+                                  title="Double-click to edit">{{ exam.exam_name }}</span>
+                            {% else %}
+                            {{ exam.exam_name }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not exam.student_id %}
+                            <span class="editable-field" 
+                                  data-field="course_number" 
+                                  data-exam-id="{{ exam.exam_id }}"
+                                  data-original-value="{{ exam.course_number }}"
+                                  style="cursor: pointer; padding: 4px 8px; display: inline-block; width: 100%; border-radius: 4px; transition: background 0.2s;"
+                                  title="Double-click to edit">{{ exam.course_number }}</span>
+                            {% else %}
+                            {{ exam.course_number }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not exam.student_id %}
+                            <span class="editable-field" 
+                                  data-field="section" 
+                                  data-exam-id="{{ exam.exam_id }}"
+                                  data-original-value="{{ exam.section }}"
+                                  style="cursor: pointer; padding: 4px 8px; display: inline-block; width: 100%; border-radius: 4px; transition: background 0.2s;"
+                                  title="Double-click to edit">{{ exam.section }}</span>
+                            {% else %}
+                            {{ exam.section }}
+                            {% endif %}
+                        </td>
                         <td>
                             <span class="status-badge status-{{ exam.status }}">
                                 <span class="status-dot"></span>
                                 {{ exam.status|title }}
                             </span>
                         </td>
+                        <td>
+                            {% if not exam.student_id and exam.is_enabled is defined %}
+                            <form method="post" action="/teacher/exam/{{ exam.exam_id }}/toggle-enable" style="display: inline; margin: 0;">
+                                <button type="submit" 
+                                        class="toggle-btn {% if exam.is_enabled %}enabled{% else %}disabled{% endif %}"
+                                        style="padding: 4px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s;">
+                                    {% if exam.is_enabled %}
+                                    <span style="color: rgba(34, 197, 94, 0.9);">✓ Enabled</span>
+                                    {% else %}
+                                    <span style="color: rgba(220, 38, 38, 0.9);">✗ Disabled</span>
+                                    {% endif %}
+                                </button>
+                            </form>
+                            {% elif not exam.student_id %}
+                            <span style="color: rgba(255, 255, 255, 0.5); font-size: 12px;">—</span>
+                            {% else %}
+                            <span style="color: rgba(255, 255, 255, 0.5); font-size: 12px;">—</span>
+                            {% endif %}
+                        </td>
                         <td>{{ exam.date_published.strftime('%Y-%m-%d') if exam.date_published else '—' }}</td>
                         <td>{{ exam.student or 'Template' }}</td>
                         <td>{{ "%.1f"|format(exam.final_grade * 100) if exam.final_grade else '—' }}{% if exam.final_grade %}%{% endif %}</td>
                         <td>
-                            <a href="/teacher/exam/{{ exam.exam_id }}">View</a>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <a href="/teacher/exam/{{ exam.exam_id }}" style="color: rgba(170, 220, 255, 0.9); text-decoration: none;">View</a>
+                                {% if not exam.student_id %}
+                                <span style="color: rgba(255, 255, 255, 0.3);">|</span>
+                                <a href="/teacher/exam/{{ exam.exam_id }}/edit" style="color: rgba(170, 220, 255, 0.9); text-decoration: none;">Edit</a>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -345,11 +548,173 @@
     </div>
 
     <script>
+        // Inline editing functionality - show input on double-click
+        function makeEditable(field) {
+            const fieldName = field.getAttribute('data-field');
+            const examId = field.getAttribute('data-exam-id');
+            const originalValue = field.getAttribute('data-original-value');
+            const currentText = field.textContent.trim();
+            
+            // Create input element
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'inline-edit';
+            input.value = currentText;
+            input.setAttribute('data-field', fieldName);
+            input.setAttribute('data-exam-id', examId);
+            input.setAttribute('data-original-value', originalValue);
+            
+            // Apply uppercase transformation for course_number
+            if (fieldName === 'course_number') {
+                input.style.textTransform = 'uppercase';
+                input.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase();
+                });
+            }
+            
+            // Replace span with input
+            const parent = field.parentElement;
+            parent.replaceChild(input, field);
+            input.focus();
+            input.select();
+            
+            // Handle blur (save or cancel)
+            input.addEventListener('blur', function() {
+                const newValue = this.value.trim();
+                const originalVal = this.getAttribute('data-original-value');
+                const field = this.getAttribute('data-field');
+                const examId = this.getAttribute('data-exam-id');
+                
+                // Create new span element
+                const span = document.createElement('span');
+                span.className = 'editable-field';
+                span.setAttribute('data-field', field);
+                span.setAttribute('data-exam-id', examId);
+                span.setAttribute('data-original-value', newValue || originalVal);
+                span.style.cursor = 'pointer';
+                span.style.padding = '4px 8px';
+                span.style.display = 'inline-block';
+                span.style.width = '100%';
+                span.style.borderRadius = '4px';
+                span.style.transition = 'background 0.2s';
+                span.setAttribute('title', 'Double-click to edit');
+                span.textContent = newValue || originalVal;
+                
+                // Replace input with span
+                parent.replaceChild(span, this);
+                
+                // Save if value changed
+                if (newValue && newValue !== originalVal) {
+                    updateExamField(examId, field, newValue);
+                }
+                
+                // Re-attach double-click listener
+                span.addEventListener('dblclick', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    makeEditable(this);
+                });
+            });
+            
+            // Handle Enter and Escape keys
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.blur();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    // Cancel editing
+                    const originalVal = this.getAttribute('data-original-value');
+                    const fieldAttr = this.getAttribute('data-field');
+                    const examIdAttr = this.getAttribute('data-exam-id');
+                    
+                    const span = document.createElement('span');
+                    span.className = 'editable-field';
+                    span.setAttribute('data-field', fieldAttr);
+                    span.setAttribute('data-exam-id', examIdAttr);
+                    span.setAttribute('data-original-value', originalVal);
+                    span.style.cursor = 'pointer';
+                    span.style.padding = '4px 8px';
+                    span.style.display = 'inline-block';
+                    span.style.width = '100%';
+                    span.style.borderRadius = '4px';
+                    span.style.transition = 'background 0.2s';
+                    span.setAttribute('title', 'Double-click to edit');
+                    span.textContent = originalVal;
+                    
+                    parent.replaceChild(span, this);
+                    
+                    // Re-attach double-click listener
+                    span.addEventListener('dblclick', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        makeEditable(this);
+                    });
+                }
+            });
+        }
+        
+        // Function to attach event listeners to editable fields
+        function attachEditableListeners() {
+            const editableFields = document.querySelectorAll('.editable-field');
+            
+            editableFields.forEach(field => {
+                // Remove any existing listeners by cloning
+                const newField = field.cloneNode(true);
+                field.parentNode.replaceChild(newField, field);
+                
+                // Attach double-click listener
+                newField.addEventListener('dblclick', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    makeEditable(this);
+                });
+            });
+        }
+        
+        // Attach listeners when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', attachEditableListeners);
+        } else {
+            // DOM is already loaded
+            attachEditableListeners();
+        }
+        
+        // Also try attaching after a short delay to ensure everything is loaded
+        setTimeout(attachEditableListeners, 100);
+        
+        function updateExamField(examId, field, value) {
+            const formData = new URLSearchParams();
+            formData.append('field', field);
+            formData.append('value', value);
+            
+            fetch(`/teacher/exam/${examId}/quick-edit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formData.toString()
+            })
+            .then(response => {
+                if (response.redirected) {
+                    // Reload page to show updated data
+                    window.location.reload();
+                } else if (!response.ok) {
+                    alert('Error updating field. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating field. Please try again.');
+            });
+        }
+
         // Ensure sidebar is present - if not, redirect to load via dashboard
         (function() {
             if (!document.querySelector('.sidebar') && !document.querySelector('.dashboard-layout')) {
                 const currentPath = window.location.pathname;
                 if (currentPath.startsWith('/teacher/') && currentPath !== '/teacher/dashboard') {
+                    sessionStorage.setItem('redirectAfterDashboard', currentPath + window.location.search);
                     window.location.href = '/teacher/dashboard';
                 }
             }

@@ -149,6 +149,36 @@
         color: rgba(220, 245, 255, 0.95);
       }
 
+      .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        margin: 0;
+      }
+
+      .back-button:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.95);
+        transform: translateX(-2px);
+      }
+
+      .back-button::before {
+        content: "←";
+        font-size: 14px;
+        font-weight: 600;
+      }
+
       .alert {
         padding: 14px 18px;
         border-radius: 8px;
@@ -193,6 +223,7 @@
         margin-bottom: 20px;
         padding-bottom: 14px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        position: relative;
       }
 
       .panel-title {
@@ -497,6 +528,46 @@
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
       }
 
+      .btn-warning {
+        background: linear-gradient(180deg, rgba(245, 158, 11, 0.92), rgba(217, 119, 6, 0.88));
+        border: 1px solid rgba(251, 191, 36, 0.5);
+        color: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-warning:hover {
+        background: linear-gradient(180deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.92));
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
+      }
+
+      .back-button {
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+
+      .back-button::before {
+        content: '←';
+        display: inline-block;
+      }
+
+      .back-button:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.95);
+        transform: translateX(-2px);
+      }
+
       .form-group {
         margin-bottom: 16px;
       }
@@ -659,6 +730,19 @@
                                 Draft
                             </span>
                         {% endif %}
+                        {% if not is_student_exam %}
+                            {% if exam.is_enabled is defined and exam.is_enabled %}
+                                <span class="status-badge" style="background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: rgba(134, 239, 172, 0.9); margin-left: 8px;">
+                                    <span class="status-dot" style="background: #4CAF50;"></span>
+                                    Enabled
+                                </span>
+                            {% elif exam.is_enabled is defined and not exam.is_enabled %}
+                                <span class="status-badge" style="background: rgba(220, 38, 38, 0.2); border: 1px solid rgba(220, 38, 38, 0.4); color: rgba(255, 180, 180, 0.9); margin-left: 8px;">
+                                    <span class="status-dot" style="background: #dc3545;"></span>
+                                    Disabled
+                                </span>
+                            {% endif %}
+                        {% endif %}
                     </div>
                 </div>
                 
@@ -740,22 +824,61 @@
         </div>
         {% endif %}
 
-        <!-- Terminate Exam Section -->
-        {% if exam.date_published and exam.status != 'terminated' %}
+        <!-- Exam Actions Section -->
         <div class="panel">
             <div class="panel-header">
-                <h2 class="panel-title">Actions</h2>
+                <h2 class="panel-title">Exam Actions</h2>
+                <a href="/teacher/exams" class="back-button">Back</a>
             </div>
-            <form method="post" action="/teacher/exam/{{ exam.exam_id }}/terminate" 
-                  onsubmit="return confirm('Are you sure? After termination this exam will not be available to any students!');">
-                <button type="submit" class="btn btn-danger">Terminate Exam</button>
-            </form>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                {% if not is_student_exam %}
+                <a href="/teacher/exam/{{ exam.exam_id }}/edit" class="btn btn-primary">Edit Exam</a>
+                <a href="/teacher/exam/{{ exam.exam_id }}/review" class="btn btn-secondary">Review/Edit Questions</a>
+                {% endif %}
+                
+                {% if exam.date_published and exam.status != 'terminated' %}
+                <form method="post" action="/teacher/exam/{{ exam.exam_id }}/terminate" 
+                      style="display: inline;"
+                      onsubmit="return confirm('Are you sure? After termination this exam will not be available to any students!');">
+                    <button type="submit" class="btn btn-danger">Terminate Exam</button>
+                </form>
+                {% endif %}
+                
+                    {% if exam.status == 'terminated' or exam.status == 'completed' %}
+                    <form method="post" action="/teacher/exam/{{ exam.exam_id }}/reopen" 
+                          style="display: inline;"
+                          onsubmit="return confirm('Reopen this exam? It will become available to students again.');">
+                        <button type="submit" class="btn btn-primary">Reopen Exam</button>
+                    </form>
+                    {% endif %}
+                
+                {% if not is_student_exam and exam.is_enabled is defined %}
+                    {% if exam.is_enabled %}
+                    <form method="post" action="/teacher/exam/{{ exam.exam_id }}/disable" 
+                          style="display: inline;"
+                          onsubmit="return confirm('Disable this exam? Students will not be able to access it.');">
+                        <button type="submit" class="btn btn-warning">Disable Exam</button>
+                    </form>
+                    {% else %}
+                    <form method="post" action="/teacher/exam/{{ exam.exam_id }}/enable" 
+                          style="display: inline;"
+                          onsubmit="return confirm('Enable this exam? Students will be able to access it again.');">
+                        <button type="submit" class="btn btn-success">Enable Exam</button>
+                    </form>
+                    {% endif %}
+                {% endif %}
+            </div>
         </div>
-        {% endif %}
         
         {% if exam.status == 'terminated' %}
         <div class="alert alert-warning">
-            <strong>This exam has been terminated.</strong> It is no longer available to students.
+            <strong>This exam has been terminated.</strong> It is no longer available to students. You can reopen it using the button above.
+        </div>
+        {% endif %}
+        
+        {% if not is_student_exam and exam.is_enabled is defined and not exam.is_enabled %}
+        <div class="alert alert-warning">
+            <strong>This exam is disabled.</strong> Students cannot access it. You can enable it using the button above.
         </div>
         {% endif %}
         
@@ -766,7 +889,7 @@
                 <h2 class="panel-title">Questions and Answers</h2>
             </div>
             {% if exam.status == "disputed" or exam.status == "completed" %}
-            <form id="grade-alteration-form" method="post" action="/teacher/exam/{{ exam.exam_id }}/alter-grades">
+            <form id="grade-alteration-form" method="post" action="/teacher/exam/{{ exam.exam_id }}/alter-grades" onsubmit="event.stopPropagation(); return true;">
             {% endif %}
             {% for question in questions %}
             <div class="question-card">
@@ -855,7 +978,8 @@
                 <div class="button-group">
                     <button type="submit"
                             form="grade-alteration-form"
-                            class="btn btn-success">
+                            class="btn btn-success"
+                            onclick="event.stopPropagation(); return true;">
                         Alter Exam Grades
                     </button>
                     {% if exam.status == "disputed" %}
@@ -873,5 +997,22 @@
         </div>
         {% endif %}
     </div>
+
+    <script>
+        // Ensure sidebar is present - if not, redirect to load via dashboard
+        (function() {
+            // Check if sidebar exists
+            if (!document.querySelector('.sidebar') && !document.querySelector('.dashboard-layout')) {
+                const currentPath = window.location.pathname;
+                // Only redirect if we're on a teacher page and not already on dashboard
+                if (currentPath.startsWith('/teacher/') && currentPath !== '/teacher/dashboard') {
+                    // Store the current URL to load after dashboard loads
+                    sessionStorage.setItem('redirectAfterDashboard', currentPath + window.location.search);
+                    // Redirect to dashboard, which will then load this page via SPA
+                    window.location.href = '/teacher/dashboard';
+                }
+            }
+        })();
+    </script>
 </body>
 </html>

@@ -133,6 +133,31 @@
             margin: 0;
         }
 
+        .attachment-box {
+            background: rgba(2, 10, 28, 0.4);
+            border: 1px solid rgba(120, 175, 255, 0.2);
+            border-left: 4px solid rgba(34, 197, 94, 0.6);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .attachment-box h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: var(--bluevox-text);
+            font-size: 1.1em;
+        }
+
+        .attachment-box img {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .attachment-box iframe {
+            display: block;
+        }
+
         .answer-form {
             margin-top: 20px;
         }
@@ -177,6 +202,32 @@
             <div class="rubric-box">
                 <h3>Grading Rubric</h3>
                 <p>{{ question.rubric }}</p>
+            </div>
+            {% endif %}
+            
+            {% if question.attachment_filename %}
+            <div class="attachment-box">
+                <h3>Reference Image/File</h3>
+                {% if question.attachment_filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg')) %}
+                    {# Display image inline #}
+                    <div style="margin-top: 12px; text-align: center;">
+                        <img src="/static/{{ question.attachment_path }}" 
+                             alt="{{ question.attachment_filename }}"
+                             style="max-width: 100%; max-height: 500px; height: auto; border-radius: 8px; border: 1px solid rgba(120, 175, 255, 0.2); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+                    </div>
+                {% elif question.attachment_filename.lower().endswith('.pdf') %}
+                    {# Embed PDF viewer #}
+                    <div style="margin-top: 12px; width: 100%; height: 600px; border-radius: 8px; border: 1px solid rgba(120, 175, 255, 0.2); overflow: hidden; background: rgba(255, 255, 255, 0.05);">
+                        <iframe src="/static/{{ question.attachment_path }}#toolbar=0" 
+                                style="width: 100%; height: 100%; border: none;"
+                                title="{{ question.attachment_filename }}">
+                            <p style="color: rgba(255, 255, 255, 0.7); padding: 20px;">
+                                Your browser does not support PDFs. 
+                                <a href="/static/{{ question.attachment_path }}" target="_blank" style="color: rgba(170, 220, 255, 0.9);">Click here to open the PDF</a>
+                            </p>
+                        </iframe>
+                    </div>
+                {% endif %}
             </div>
             {% endif %}
             

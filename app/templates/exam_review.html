@@ -430,6 +430,37 @@
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
       }
 
+      .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        margin: 0;
+        border: none;
+      }
+
+      .back-button:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.95);
+        transform: translateX(-2px);
+      }
+
+      .back-button::before {
+        content: "←";
+        font-size: 14px;
+        font-weight: 600;
+      }
+
       @media (max-width: 768px) {
         .info-grid,
         .form-grid {
@@ -547,7 +578,10 @@
             </div>
             {% for question in questions %}
             <div class="question-card">
-                <div class="question-number">Question {{ question.question_number }}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div class="question-number">Question {{ question.question_number }}</div>
+                    <a href="/teacher/question/{{ question.id }}/edit" class="btn btn-secondary" style="padding: 6px 16px; font-size: 13px;">Edit Question</a>
+                </div>
                 <div class="question-section">
                     <div class="question-label">Question</div>
                     <div class="question-content">{{ question.question_text }}</div>
@@ -564,6 +598,70 @@
                     <div class="question-content">{{ question.rubric }}</div>
                 </div>
                 {% endif %}
+                
+                <!-- Image/File Attachment Section -->
+                <div class="question-section">
+                    <div class="question-label">Reference Image/File</div>
+                    {% if question.attachment_filename %}
+                    <div style="margin-top: 12px;">
+                        {% if question.attachment_filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')) %}
+                            {# Display image preview #}
+                            <div style="margin-bottom: 12px;">
+                                <img src="/static/{{ question.attachment_path }}" 
+                                     alt="{{ question.attachment_filename }}"
+                                     style="max-width: 100%; max-height: 400px; height: auto; border-radius: 8px; border: 1px solid rgba(120, 175, 255, 0.2); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                <span style="color: rgba(255, 255, 255, 0.7); font-size: 13px;">{{ question.attachment_filename }}</span>
+                                <form method="post" action="/teacher/question/{{ question.id }}/remove-attachment" style="display: inline;" onsubmit="return confirm('Remove this image?');">
+                                    <button type="submit" style="background: rgba(220, 38, 38, 0.2); border: 1px solid rgba(220, 38, 38, 0.4); color: rgba(255, 255, 255, 0.9); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">Remove</button>
+                                </form>
+                            </div>
+                        {% elif question.attachment_filename.lower().endswith('.pdf') %}
+                            {# PDF preview #}
+                            <div style="margin-bottom: 12px; width: 100%; height: 400px; border-radius: 8px; border: 1px solid rgba(120, 175, 255, 0.2); overflow: hidden; background: rgba(255, 255, 255, 0.05);">
+                                <iframe src="/static/{{ question.attachment_path }}#toolbar=0" 
+                                        style="width: 100%; height: 100%; border: none;"
+                                        title="{{ question.attachment_filename }}">
+                                </iframe>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                <span style="color: rgba(255, 255, 255, 0.7); font-size: 13px;">{{ question.attachment_filename }}</span>
+                                <form method="post" action="/teacher/question/{{ question.id }}/remove-attachment" style="display: inline;" onsubmit="return confirm('Remove this file?');">
+                                    <button type="submit" style="background: rgba(220, 38, 38, 0.2); border: 1px solid rgba(220, 38, 38, 0.4); color: rgba(255, 255, 255, 0.9); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">Remove</button>
+                                </form>
+                            </div>
+                        {% else %}
+                            {# Other file types #}
+                            <div style="padding: 12px; background: rgba(70, 150, 255, 0.1); border-radius: 6px; border: 1px solid rgba(70, 150, 255, 0.2); margin-bottom: 12px;">
+                                <p style="color: rgba(255, 255, 255, 0.8); margin: 0 0 8px 0; font-size: 13px;">{{ question.attachment_filename }}</p>
+                                <a href="/static/{{ question.attachment_path }}" 
+                                   target="_blank"
+                                   style="color: rgba(170, 220, 255, 0.9); text-decoration: none; font-size: 12px;">
+                                    View file
+                                </a>
+                            </div>
+                            <form method="post" action="/teacher/question/{{ question.id }}/remove-attachment" style="display: inline;" onsubmit="return confirm('Remove this file?');">
+                                <button type="submit" style="background: rgba(220, 38, 38, 0.2); border: 1px solid rgba(220, 38, 38, 0.4); color: rgba(255, 255, 255, 0.9); padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">Remove</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div style="color: rgba(255, 255, 255, 0.5); font-size: 13px; margin-top: 8px;">No image/file attached</div>
+                    {% endif %}
+                    
+                    <form method="post" action="/teacher/question/{{ question.id }}/upload-attachment" enctype="multipart/form-data" style="margin-top: 12px;">
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="file" 
+                                   name="file" 
+                                   accept="image/*,.pdf"
+                                   style="flex: 1; padding: 8px; background: var(--field-bg); border: 1px solid var(--field-border); border-radius: 6px; color: rgba(255, 255, 255, 0.95); font-size: 13px;"
+                                   required>
+                            <button type="submit" style="background: var(--btn-primary); border: 1px solid rgba(170, 220, 255, 0.5); color: rgba(255, 255, 255, 0.95); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">Add Image/File</button>
+                        </div>
+                        <p style="color: rgba(255, 255, 255, 0.5); font-size: 11px; margin-top: 6px;">Add an image or PDF to display with this question. Images will be shown inline, PDFs will be embedded. (Max 10MB)</p>
+                    </form>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -617,7 +715,7 @@
                     </p>
                 </div>
                 <div class="button-group" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
-                    <a href="/teacher/dashboard" class="btn btn-secondary">Cancel</a>
+                    <a href="/teacher/dashboard" class="btn btn-secondary" onclick="return confirmCancel(event);">Cancel</a>
                     <button type="submit" class="btn btn-primary">Generate and Review Again</button>
                     {% if not exam.date_published %}
                     <button type="submit" form="publish-form" class="btn btn-publish">Publish Exam</button>
@@ -634,5 +732,59 @@
         </div>
         {% endif %}
     </div>
+
+    <script>
+        // Track form changes (for regenerate form)
+        let formChanged = false;
+        const regenerateForm = document.querySelector('form[action*="regenerate"]');
+        if (regenerateForm) {
+            const formInputs = regenerateForm.querySelectorAll('input, textarea');
+            formInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    formChanged = true;
+                });
+                input.addEventListener('input', function() {
+                    formChanged = true;
+                });
+            });
+
+            // Reset formChanged flag when form is submitted
+            regenerateForm.addEventListener('submit', function() {
+                formChanged = false;
+            });
+        }
+
+        // Cancel button with warning
+        function confirmCancel(e) {
+            if (formChanged) {
+                if (!confirm('You have entered information for regenerating questions. Are you sure you want to cancel? All entered data will be lost.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+        // Warn before leaving page if form has changes
+        window.addEventListener('beforeunload', function(e) {
+            if (formChanged) {
+                e.preventDefault();
+                e.returnValue = 'You have entered information. Are you sure you want to leave? All entered data will be lost.';
+                return e.returnValue;
+            }
+        });
+
+        // Ensure sidebar is present - if not, redirect to load via dashboard
+        (function() {
+            if (!document.querySelector('.sidebar') && !document.querySelector('.dashboard-layout')) {
+                const currentPath = window.location.pathname;
+                if (currentPath.startsWith('/teacher/') && currentPath !== '/teacher/dashboard') {
+                    sessionStorage.setItem('redirectAfterDashboard', currentPath + window.location.search);
+                    window.location.href = '/teacher/dashboard';
+                }
+            }
+        })();
+    </script>
 </body>
 </html>

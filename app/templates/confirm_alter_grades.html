@@ -3,171 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirm Grade Alterations - {{ exam.exam_name }}</title>
+    <title>Confirm Grade Alterations - {{ exam.exam_name }} - DePaul BlueVox</title>
     <link rel="icon" type="image/png" href="/static/assets/depaul-shield.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    
     <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/bluevox.css">
     <style>
-        body {
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-        .warning-box {
-            background-color: #fff3cd;
-            border-left: 4px solid #ff9800;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .changes-section {
-            margin: 20px 0;
-        }
-        .change-item {
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
-        .grade-comparison {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin: 10px 0;
-        }
-        .old-grade {
-            color: #666;
-            text-decoration: line-through;
-        }
-        .new-grade {
-            color: #4CAF50;
-            font-weight: 600;
-        }
-        .arrow {
-            color: #666;
-            font-size: 1.2em;
-        }
-        .button-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-        }
-        .btn-confirm {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            font-size: 1em;
-            cursor: pointer;
-        }
-        .btn-cancel {
-            background-color: #666;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            font-size: 1em;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .btn-confirm:hover {
-            background-color: #45a049;
-        }
-        .btn-cancel:hover {
-            background-color: #555;
-        }
+      :root {
+        --page-text: rgba(255, 255, 255, 0.9);
+        --muted: rgba(255, 255, 255, 0.7);
+        --accent: rgba(120, 190, 255, 0.75);
+        --accent-soft: rgba(90, 160, 255, 0.22);
+        --panel-bg: rgba(2, 10, 28, 0.65);
+        --panel-border: rgba(120, 175, 255, 0.3);
+        --field-bg: rgba(2, 10, 28, 0.38);
+        --field-border: rgba(120, 175, 255, 0.55);
+        --field-border-focus: rgba(150, 210, 255, 0.85);
+        --btn-primary: rgba(70, 150, 255, 0.92);
+        --btn-primary-hover: rgba(90, 170, 255, 0.95);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body.bluevox-alter {
+        margin: 0;
+        padding: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        color: var(--page-text);
+        overflow-x: hidden;
+        min-height: 100vh;
+        background:
+          radial-gradient(1100px 760px at 88% 55%, rgba(40, 165, 255, 0.34), rgba(0, 0, 0, 0) 62%),
+          radial-gradient(900px 650px at 92% 60%, rgba(20, 120, 255, 0.20), rgba(0, 0, 0, 0) 62%),
+          linear-gradient(90deg, #02040b, #031531 55%, #062f67);
+        position: relative;
+      }
+
+      body.bluevox-alter::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.75) 50%, transparent 52%),
+          radial-gradient(1px 1px at 18% 62%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 28% 78%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 33% 35%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 46% 22%, rgba(255, 255, 255, 0.5) 50%, transparent 52%),
+          radial-gradient(1px 1px at 52% 66%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 63% 44%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 71% 77%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 79% 16%, rgba(255, 255, 255, 0.6) 50%, transparent 52%),
+          radial-gradient(1px 1px at 86% 58%, rgba(255, 255, 255, 0.7) 50%, transparent 52%),
+          radial-gradient(1px 1px at 92% 32%, rgba(255, 255, 255, 0.55) 50%, transparent 52%),
+          radial-gradient(1px 1px at 6% 82%, rgba(255, 255, 255, 0.5) 50%, transparent 52%);
+        opacity: 0.55;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .panel {
+        background: var(--panel-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(120, 175, 255, 0.15);
+        border-radius: 10px;
+        padding: 32px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      }
+
+      .page-title {
+        font-size: 32px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 24px;
+        letter-spacing: -0.5px;
+      }
+
+      .panel-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 16px;
+        letter-spacing: -0.3px;
+      }
+
+      .warning-box {
+        background: rgba(255, 152, 0, 0.15);
+        border: 1px solid rgba(255, 152, 0, 0.4);
+        border-left: 4px solid rgba(255, 152, 0, 0.8);
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+      }
+
+      .warning-box h2 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .warning-box p {
+        color: rgba(255, 255, 255, 0.85);
+        margin-bottom: 0;
+        line-height: 1.6;
+      }
+
+      .change-item {
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        margin-bottom: 12px;
+      }
+
+      .change-item strong {
+        display: block;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 600;
+        margin-bottom: 12px;
+        font-size: 14px;
+      }
+
+      .grade-comparison {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 8px;
+      }
+
+      .old-grade {
+        color: rgba(255, 255, 255, 0.5);
+        text-decoration: line-through;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .new-grade {
+        color: rgba(76, 175, 80, 0.9);
+        font-weight: 600;
+        font-size: 18px;
+      }
+
+      .arrow {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 20px;
+        font-weight: 300;
+      }
+
+      .no-changes {
+        color: rgba(255, 255, 255, 0.5);
+        font-style: italic;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .reason-content {
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.9);
+        white-space: pre-wrap;
+        line-height: 1.6;
+        margin-top: 8px;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        transition: all 0.2s ease;
+        border: none;
+        flex: 1;
+      }
+
+      .btn-confirm {
+        background: linear-gradient(180deg, rgba(76, 175, 80, 0.9), rgba(56, 142, 60, 0.85));
+        border: 1px solid rgba(76, 175, 80, 0.5);
+        color: rgba(255, 255, 255, 0.95);
+      }
+
+      .btn-confirm:hover {
+        background: linear-gradient(180deg, rgba(86, 185, 90, 0.95), rgba(66, 152, 70, 0.9));
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(76, 175, 80, 0.3);
+      }
+
+      .btn-cancel {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        margin-bottom: 20px;
+        border: none;
+      }
+
+      .back-button:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.95);
+        transform: translateX(-2px);
+      }
+
+      .back-button::before {
+        content: "←";
+        font-size: 16px;
+        font-weight: 600;
+      }
     </style>
 </head>
-<body>
+<body class="bluevox-alter">
     <div class="container">
-        <h1>Confirm Grade Alterations</h1>
-        
-        <div class="warning-box">
-            <h2 style="margin-top: 0; color: #856404;">⚠️ Confirm Grade Changes</h2>
-            <p style="color: #856404; margin-bottom: 0;">
-                Please review the grade changes below. Once confirmed, these changes will be permanent.
-            </p>
-        </div>
-        
-        <div class="changes-section">
-            <h2>Grade Changes</h2>
+        <div class="panel">
+            <h1 class="page-title">Confirm Grade Alterations</h1>
             
-            {% if grade_changes %}
-            <h3>Question Grade Changes:</h3>
-            {% for change in grade_changes %}
-            <div class="change-item">
-                <strong>Question {{ change.question.question_number }}:</strong>
-                <div class="grade-comparison">
-                    <span class="old-grade">{{ "%.1f"|format(change.original_grade / 100) if change.original_grade is not none else 'N/A' }}%</span>
-                    <span class="arrow">→</span>
-                    <span class="new-grade">{{ "%.1f"|format(change.new_grade) }}%</span>
+            <div class="warning-box">
+                <h2>Confirm Grade Changes</h2>
+                <p>
+                    Please review the grade changes below. Once confirmed, these changes will be permanent.
+                </p>
+            </div>
+            
+            <div class="panel">
+                <h2 class="panel-title">Grade Changes</h2>
+                
+                {% if grade_changes %}
+                <h3 style="font-size: 16px; font-weight: 600; color: rgba(255, 255, 255, 0.8); margin-bottom: 16px; margin-top: 0;">Question Grade Changes:</h3>
+                {% for change in grade_changes %}
+                <div class="change-item">
+                    <strong>Question {{ change.question.question_number }}:</strong>
+                    <div class="grade-comparison">
+                        <span class="old-grade">{{ "%.1f"|format(change.original_grade) if change.original_grade is not none else 'N/A' }}%</span>
+                        <span class="arrow">→</span>
+                        <span class="new-grade">{{ "%.1f"|format(change.new_grade) }}%</span>
+                    </div>
                 </div>
-            </div>
-            {% endfor %}
-            {% endif %}
-            
-            {% if new_final_grade is not none and new_final_grade != original_final_grade %}
-            <div class="change-item">
-                <strong>Final Grade:</strong>
-                <div class="grade-comparison">
-                    <span class="old-grade">{{ "%.1f"|format(original_final_grade) if original_final_grade else 'N/A' }}%</span>
-                    <span class="arrow">→</span>
-                    <span class="new-grade">{{ "%.1f"|format(new_final_grade) }}%</span>
+                {% endfor %}
+                {% endif %}
+                
+                {% if new_final_grade is not none and new_final_grade != original_final_grade %}
+                <div class="change-item">
+                    <strong>Final Grade:</strong>
+                    <div class="grade-comparison">
+                        <span class="old-grade">{{ "%.1f"|format(original_final_grade) if original_final_grade else 'N/A' }}%</span>
+                        <span class="arrow">→</span>
+                        <span class="new-grade">{{ "%.1f"|format(new_final_grade) }}%</span>
+                    </div>
                 </div>
+                {% endif %}
+                
+                {% if not grade_changes and (new_final_grade is none or new_final_grade == original_final_grade) %}
+                <p class="no-changes">No grade changes detected.</p>
+                {% endif %}
             </div>
-            {% endif %}
             
-            {% if not grade_changes and (new_final_grade is none or new_final_grade == original_final_grade) %}
-            <p style="color: #666; font-style: italic;">No grade changes detected.</p>
-            {% endif %}
-        </div>
-        
-        {% if grade_changes or (new_final_grade is not none and new_final_grade != original_final_grade) %}
-        <div class="changes-section" style="margin-top: 20px;">
-            <h2>Change Reason</h2>
-            {% if form_data.get('grade_change_reason') %}
-            <div class="change-item">
-                <strong>Reason:</strong>
-                <p style="margin-top: 8px; white-space: pre-wrap;">{{ form_data.get('grade_change_reason') }}</p>
+            {% if grade_changes or (new_final_grade is not none and new_final_grade != original_final_grade) %}
+            <div class="panel">
+                <h2 class="panel-title">Change Reason</h2>
+                {% if form_data.get('grade_change_reason') %}
+                <div class="reason-content">{{ form_data.get('grade_change_reason') }}</div>
+                {% else %}
+                <p class="no-changes">No reason provided.</p>
+                {% endif %}
             </div>
+            
+            <form method="post" action="/teacher/exam/{{ exam.exam_id }}/confirm-alter">
+                {% for question in questions %}
+                {% set grade_key = 'question_grade_' ~ question.id %}
+                <input type="hidden" name="question_grade_{{ question.id }}" value="{{ form_data.get(grade_key, '') }}">
+                {% endfor %}
+                <input type="hidden" name="final_grade" value="{{ form_data.get('final_grade', '') }}">
+                <input type="hidden" name="grade_change_reason" value="{{ form_data.get('grade_change_reason', '') }}">
+                
+                <div class="button-group">
+                    <button type="submit" class="btn btn-confirm">Confirm Changes</button>
+                    <a href="/teacher/exam/{{ exam.exam_id }}" class="btn btn-cancel">Cancel</a>
+                </div>
+            </form>
             {% else %}
-            <p style="color: #666; font-style: italic;">No reason provided.</p>
+            <div class="button-group">
+                <a href="/teacher/exam/{{ exam.exam_id }}" class="btn btn-cancel">Back to Exam Details</a>
+            </div>
             {% endif %}
         </div>
-        
-        <form method="post" action="/teacher/exam/{{ exam.exam_id }}/confirm-alter">
-            {% for question in questions %}
-            {% set grade_key = 'question_grade_' ~ question.id %}
-            <input type="hidden" name="question_grade_{{ question.id }}" value="{{ form_data.get(grade_key, '') }}">
-            {% endfor %}
-            <input type="hidden" name="final_grade" value="{{ form_data.get('final_grade', '') }}">
-            <input type="hidden" name="grade_change_reason" value="{{ form_data.get('grade_change_reason', '') }}">
-            
-            <div class="button-group">
-                <button type="submit" class="btn-confirm">Confirm Changes</button>
-                <a href="/teacher/exam/{{ exam.exam_id }}" class="btn-cancel">Cancel</a>
-            </div>
-        </form>
-        {% else %}
-        <div class="button-group">
-            <a href="/teacher/exam/{{ exam.exam_id }}" class="btn-cancel">Back to Exam Details</a>
-        </div>
-        {% endif %}
     </div>
+
+    <script>
+
+        // Ensure sidebar is present - if not, redirect to load via dashboard
+        (function() {
+            if (!document.querySelector('.sidebar') && !document.querySelector('.dashboard-layout')) {
+                const currentPath = window.location.pathname;
+                if (currentPath.startsWith('/teacher/') && currentPath !== '/teacher/dashboard') {
+                    sessionStorage.setItem('redirectAfterDashboard', currentPath + window.location.search);
+                    window.location.href = '/teacher/dashboard';
+                }
+            }
+        })();
+    </script>
 </body>
 </html>

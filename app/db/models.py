@@ -66,6 +66,7 @@ class Exam(Base):
     # Student exam session fields (existing)
     student_id = Column(Integer, ForeignKey("students.id"), nullable=True)  # Nullable for teacher-created exams
     status = Column(String(50), default="in_progress")  # in_progress, completed, active, not_started, disputed
+    is_enabled = Column(Boolean, default=True, nullable=False)  # Whether exam is enabled/disabled by teacher
     dispute_reason = Column(Text, nullable=True)  # Student's reason for disputing grade
     grade_change_reason = Column(Text, nullable=True)  # Instructor's reason for changing grade
     grade_changed_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # Instructor who changed the grade
@@ -92,6 +93,9 @@ class Question(Base):
     grade = Column(Float, nullable=True)
     feedback = Column(Text, nullable=True)
     is_followup = Column(Boolean, default=False)
+    # File attachment fields
+    attachment_path = Column(String(500), nullable=True)  # Path to uploaded file
+    attachment_filename = Column(String(255), nullable=True)  # Original filename
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     exam = relationship("Exam", back_populates="questions")
