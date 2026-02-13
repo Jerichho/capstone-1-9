@@ -16,6 +16,7 @@
     
     <link rel="stylesheet" href="/static/styles.css">
     <link rel="stylesheet" href="/static/bluevox.css">
+    <script src="/static/create_exam.js" defer></script>
     <style>
       :root {
         --page-text: rgba(255, 255, 255, 0.9);
@@ -1663,6 +1664,8 @@
                         // Can be enhanced later for AJAX form submission
                     });
                 });
+
+                document.dispatchEvent(new Event('bluevox:content-loaded'));
             }
             
             // Handle link clicks
