@@ -42,8 +42,13 @@ async def mark_notification_read(
     # Mark as read
     notification_service.mark_as_read(db, notification_id, user.id)
     
-    # If it's a grade dispute notification and has a related exam, redirect to exam details
-    if notification.notification_type == "grade_disputed" and notification.related_exam_id:
+    # If notification is tied to an exam, redirect to the exam page
+    if notification.related_exam_id and notification.notification_type in (
+        "grade_disputed",
+        "exam_available",
+        "exam_complete",
+        "grade_changed"
+    ):
         exam = db.query(Exam).filter(Exam.id == notification.related_exam_id).first()
         if exam:
             # Redirect to exam details page using exam_id string

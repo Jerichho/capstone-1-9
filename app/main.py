@@ -643,11 +643,18 @@ async def student_start_exam(
         if student_exam.status == "completed":
             return RedirectResponse(url=f"/student/exam/{exam_id}?error=You have already completed this exam", status_code=302)
         
-        # Ensure duration values are copied from template (in case they're missing)
-        if exam.is_timed and (student_exam.duration_hours is None or student_exam.duration_minutes is None):
-            student_exam.duration_hours = exam.duration_hours
-            student_exam.duration_minutes = exam.duration_minutes
-            db.commit()
+        # Ensure timed exam fields are set once when the exam starts
+        if exam.is_timed:
+            updated_timed_fields = False
+            if student_exam.duration_hours is None or student_exam.duration_minutes is None:
+                student_exam.duration_hours = exam.duration_hours
+                student_exam.duration_minutes = exam.duration_minutes
+                updated_timed_fields = True
+            if student_exam.student_exam_start_time is None:
+                student_exam.student_exam_start_time = now
+                updated_timed_fields = True
+            if updated_timed_fields:
+                db.commit()
         
         # Check if student exam has questions, if not generate them (safety check for incomplete generation)
         student_questions = QuestionRepository.get_by_exam(db, student_exam.id)
@@ -722,6 +729,7 @@ async def student_start_exam(
             is_timed=exam.is_timed,
             duration_hours=exam.duration_hours,  # Simply copy from template
             duration_minutes=exam.duration_minutes,  # Simply copy from template
+            student_exam_start_time=now if exam.is_timed else None,
             final_explanation=exam.final_explanation  # Copy LLM prompt
         )
         
@@ -2420,12 +2428,28 @@ async def update_exam_details(
         return RedirectResponse(url=f"/teacher/exam/{exam_id}/edit?error=Cannot edit student-specific exams", status_code=302)
     
     # Get all related exams (same course, exam name, quarter)
+    old_course_number = exam.course_number
+    old_section = exam.section
+    old_exam_name = exam.exam_name
+    old_quarter_year = exam.quarter_year
+
     related_exams = db.query(Exam).filter(
         Exam.instructor_id == user.id,
         Exam.course_number == exam.course_number,
         Exam.exam_name == exam.exam_name,
         Exam.quarter_year == exam.quarter_year,
         Exam.student_id.is_(None)  # Only template exams
+    ).all()
+
+    # Student-specific exams that already started should receive timing updates too
+    student_exams = db.query(Exam).filter(
+        Exam.instructor_id == user.id,
+        Exam.course_number == old_course_number,
+        Exam.section == old_section,
+        Exam.exam_name == old_exam_name,
+        Exam.quarter_year == old_quarter_year,
+        Exam.student_id.isnot(None),
+        Exam.status != "completed"
     ).all()
     
     try:
@@ -2459,6 +2483,10 @@ async def update_exam_details(
                 logger.warning(f"Error parsing date_end_availability: {e}")
                 date_end_availability_dt = None
         
+        if is_timed == "true":
+            duration_hours = 0 if duration_hours is None else duration_hours
+            duration_minutes = 0 if duration_minutes is None else duration_minutes
+
         # Update all related exams
         for related_exam in related_exams:
             related_exam.exam_name = exam_name
@@ -2470,12 +2498,18 @@ async def update_exam_details(
             related_exam.date_end = date_end_dt
             related_exam.date_end_availability = date_end_availability_dt
             related_exam.is_timed = is_timed == "true"
-            related_exam.duration_hours = duration_hours if duration_hours else None
-            related_exam.duration_minutes = duration_minutes if duration_minutes else None
+            related_exam.duration_hours = duration_hours if is_timed == "true" else None
+            related_exam.duration_minutes = duration_minutes if is_timed == "true" else None
             
             # Update exam_id if course/section/name changed
             new_exam_id = f"{course_number}-{section}-{exam_name.lower().replace(' ', '-')}-{quarter_year}"
             related_exam.exam_id = new_exam_id
+
+        # Update timing on in-progress student exams for this template
+        for student_exam in student_exams:
+            student_exam.is_timed = is_timed == "true"
+            student_exam.duration_hours = duration_hours if is_timed == "true" else None
+            student_exam.duration_minutes = duration_minutes if is_timed == "true" else None
         
         db.commit()
         return RedirectResponse(url=f"/teacher/exam/{related_exams[0].exam_id}/edit?success=Exam updated successfully", status_code=302)

@@ -1,5 +1,6 @@
 """Exam routes."""
 import logging
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Request, HTTPException, Form
 from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
@@ -58,6 +59,17 @@ async def get_exam(request: Request, exam_id: int, db: Session = Depends(get_db)
     status = exam_service.get_exam_status(db, exam_id)
     
     # Pass exam timing information for timer display - simplified: just pass duration
+    exam_start_time_ms = None
+    if exam.is_timed:
+        if exam.student_exam_start_time is None:
+            exam.student_exam_start_time = datetime.now(timezone.utc)
+            db.commit()
+            db.refresh(exam)
+        if exam.student_exam_start_time is not None:
+            start_time = exam.student_exam_start_time
+            if start_time.tzinfo is None:
+                start_time = start_time.replace(tzinfo=timezone.utc)
+            exam_start_time_ms = int(start_time.timestamp() * 1000)
     # Refresh question to get latest attachment info
     db.refresh(question)
     return render_template("question.html", {
@@ -68,7 +80,8 @@ async def get_exam(request: Request, exam_id: int, db: Session = Depends(get_db)
         "total_questions": status["total_questions"],
         "is_timed": exam.is_timed,
         "duration_hours": exam.duration_hours if exam.is_timed else None,
-        "duration_minutes": exam.duration_minutes if exam.is_timed else None
+        "duration_minutes": exam.duration_minutes if exam.is_timed else None,
+        "exam_start_time_ms": exam_start_time_ms
     })
 
 
@@ -253,4 +266,3 @@ async def submit_dispute(
     
     # Fallback (shouldn't reach here, but just in case)
     return RedirectResponse(url=f"/api/exam/{exam_id}/complete?success=Dispute submitted successfully", status_code=302)
-

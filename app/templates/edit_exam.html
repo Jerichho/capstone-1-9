@@ -258,7 +258,7 @@
                         <div>
                             <label for="duration_hours">Hours:</label>
                             <select id="duration_hours" name="duration_hours">
-                                <option value="">0</option>
+                                <option value="0">0</option>
                                 {% for i in range(1, 25) %}
                                 <option value="{{ i }}" {% if exam.duration_hours == i %}selected{% endif %}>{{ i }}</option>
                                 {% endfor %}
@@ -267,7 +267,7 @@
                         <div>
                             <label for="duration_minutes">Minutes:</label>
                             <select id="duration_minutes" name="duration_minutes">
-                                <option value="">0</option>
+                                <option value="0">0</option>
                                 {% for i in range(5, 60, 5) %}
                                 <option value="{{ i }}" {% if exam.duration_minutes == i %}selected{% endif %}>{{ i }}</option>
                                 {% endfor %}

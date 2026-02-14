@@ -259,7 +259,10 @@
             const durationHours = {{ duration_hours }};
             const durationMinutes = {{ duration_minutes }};
             const durationMs = (durationHours * 60 * 60 * 1000) + (durationMinutes * 60 * 1000);
-            const startTime = new Date().getTime();
+            const serverStartTimeMs = {{ exam_start_time_ms if exam_start_time_ms is not none else 'null' }};
+            const startTime = (typeof serverStartTimeMs === 'number' && !Number.isNaN(serverStartTimeMs))
+                ? serverStartTimeMs
+                : new Date().getTime();
             const examEndTime = startTime + durationMs;
             
             const timerDisplay = document.getElementById('timerDisplay');
@@ -336,4 +339,3 @@
     {% endif %}
 </body>
 </html>
-
