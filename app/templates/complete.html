@@ -152,7 +152,7 @@
                 <div class="question-result">
                     <div class="result-header">
                         <h3>Question {{ question.question_number }}</h3>
-                        <span class="grade-badge">Grade: {{ "%.1f"|format(question.grade * 100 if question.grade else 0) }}%</span>
+                        <span class="grade-badge">Grade: {{ "%.1f"|format(question.grade if question.grade is not none else 0) }}%</span>
                     </div>
                     
                     <div class="result-content">
